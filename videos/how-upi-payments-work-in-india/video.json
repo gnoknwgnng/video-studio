@@ -1,0 +1,188 @@
+{
+  "company": "UPI",
+  "url": "",
+  "colors": {
+    "primary": "#0D47A1",
+    "accent": "#5472D3",
+    "alert": "#D32F2F",
+    "ink": "#212121",
+    "background": "#F5F5F5"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Cash transactions are",
+      "title_em": "slow and risky.",
+      "alert_word": "risky.",
+      "icon": "chip",
+      "meter_label": "Friction level",
+      "cards": [
+        {
+          "text": "Finding exact change",
+          "cue": "change"
+        },
+        {
+          "text": "Traveling to bank",
+          "cue": "bank"
+        },
+        {
+          "text": "Waiting in lines",
+          "cue": "lines"
+        },
+        {
+          "text": "Security worries",
+          "cue": "security"
+        }
+      ],
+      "lines": [
+        {
+          "say": "For Indian shoppers, cash transactions are slow and risky. Finding exact change. Traveling to bank. Waiting in lines. Security worries.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "connects",
+      "tagline": "Instant, secure payments,",
+      "tagline_em": "anywhere.",
+      "tagline_cue": "connects",
+      "photos": [],
+      "tags": [
+        {
+          "text": "Consumers",
+          "cue": "consumers"
+        },
+        {
+          "text": "Merchants",
+          "cue": "merchants"
+        },
+        {
+          "text": "Banks",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "That’s where U P I connects consumers, merchants, and banks.",
+          "seed": 44
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "title": "How it works",
+      "steps": [
+        {
+          "title": "Create a VPA",
+          "chips": [
+            "App",
+            "VPA"
+          ],
+          "cue": "Create"
+        },
+        {
+          "title": "Initiate payment",
+          "chips": [
+            "Scan",
+            "Enter"
+          ],
+          "cue": "Initiate"
+        },
+        {
+          "title": "Confirm instantly",
+          "chips": [
+            "PIN",
+            "Notify"
+          ],
+          "cue": "Confirm"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Create a virtual address in your app.",
+          "seed": 45
+        },
+        {
+          "say": "Initiate payment by scanning a QR or entering the VPA.",
+          "seed": 46
+        },
+        {
+          "say": "Confirm instantly with your PIN and you’re done.",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "UPI",
+      "post": "different?",
+      "em_cue": "U",
+      "mark_cue": "different",
+      "lines": [
+        {
+          "say": "So what makes U P I different?",
+          "seed": 48
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Card payments",
+      "right_label": "UPI",
+      "rows": [
+        {
+          "left": "Requires POS terminal",
+          "right": "No hardware needed",
+          "left_cue": "require",
+          "right_cue": "No"
+        },
+        {
+          "left": "Higher transaction fees",
+          "right": "Usually free",
+          "left_cue": "Higher",
+          "right_cue": "Usually"
+        },
+        {
+          "left": "Slower settlement",
+          "right": "Instant settlement",
+          "left_cue": "slow",
+          "right_cue": "instantly"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Card payments require a POS terminal, while U P I needs no hardware.",
+          "seed": 49
+        },
+        {
+          "say": "Card fees are higher, but U P I transactions are usually free.",
+          "seed": 50
+        },
+        {
+          "say": "Card settlements can be slow, whereas U P I settles instantly.",
+          "seed": 51
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Payments made simple",
+      "tagline_em": "everywhere",
+      "logo_cue": "U",
+      "tagline_cue": "Payments",
+      "lines": [
+        {
+          "say": "Payments made simple everywhere, U P I.",
+          "seed": 52
+        }
+      ]
+    }
+  ]
+}
