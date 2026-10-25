@@ -1,0 +1,149 @@
+{
+  "company": "DocsDocs",
+  "url": "docs-docs.com",
+  "logo": "logo.png",
+  "colors": {
+    "primary": "#024c87",
+    "accent": "#85bbe0",
+    "alert": "#d64545",
+    "ink": "#0d2440",
+    "background": "#f3f6fb"
+  },
+  "voice": { "exaggeration": 0.6, "cfg_weight": 0.45 },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Insurance paperwork is",
+      "title_em": "dentistry's biggest headache.",
+      "alert_word": "headache.",
+      "icon": "tooth",
+      "meter_label": "Headache level",
+      "cards": [
+        { "text": "Checking coverage", "cue": "coverage" },
+        { "text": "Filing claims", "cue": "claims" },
+        { "text": "Chasing payments", "cue": "payments" },
+        { "text": "Fighting denials", "cue": "denials" }
+      ],
+      "lines": [
+        { "say": "For dental practices, insurance paperwork is the biggest headache. Checking coverage. Filing claims. Chasing payments. Fighting denials.", "seed": 99 }
+      ]
+    },
+    {
+      "type": "stats",
+      "label": "Dentists' top challenges for 2026",
+      "bars": [
+        { "name": "Insurance", "value": 55.3, "display": "55%", "cue": "insurance" },
+        { "name": "Staffing", "value": 54.2, "display": "54%" }
+      ],
+      "callout": { "em": "1 in 5", "text": "practices don't have enough admin staff", "people": 5, "empty": 1, "cue": "five", "empty_cue": "staff" },
+      "lines": [
+        { "say": "Dentists rank insurance as their number one problem, and one in five practices doesn't have enough admin staff to handle it.", "seed": 99 }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "comes",
+      "tagline": "Revenue cycle & insurance work,",
+      "tagline_em": "handled.",
+      "tagline_cue": "revenue",
+      "photos": ["billing-team-960.jpg", "reception-960.jpg"],
+      "tags": [
+        { "text": "Family practices", "cue": "family" },
+        { "text": "Multi-office groups (DSOs)", "cue": "multi" },
+        { "text": "Specialty groups (OSOs)", "highlight": true }
+      ],
+      "lines": [
+        { "say": "That's where Docs, Docs comes in. Revenue cycle and insurance work, handled for dental practices, from family clinics to multi-office groups.", "sub": "That's where DocsDocs comes in. Revenue cycle and insurance work, handled for dental practices, from family clinics to multi-office groups.", "seed": 44 }
+      ]
+    },
+    {
+      "type": "steps",
+      "title": "How it works",
+      "steps": [
+        { "title": "Before the visit", "chips": ["Schedule optimization", "Eligibility", "Pre-authorization"], "cue": "before" },
+        { "title": "After treatment", "chips": ["Complete claims", "X-rays", "Perio charts", "Narratives"], "cue": "after" },
+        { "title": "After submission", "chips": ["Claim tracking", "Payment posting", "Until resolved"], "cue": "submission" }
+      ],
+      "lines": [
+        { "say": "Before the visit, they check coverage, limits and approvals.", "seed": 47 },
+        { "say": "After treatment, they file complete claims, with every attachment the payer wants.", "seed": 48 },
+        { "say": "And after submission, they track every claim and post every payment, until it's resolved.", "seed": 49 }
+      ]
+    },
+    {
+      "type": "flip",
+      "title": "A denial doesn't",
+      "title_em": "disappear.",
+      "front": {
+        "kicker": "Claim · Crown, tooth #14",
+        "title": "Insurance claim",
+        "rows": [
+          { "k": "Billed", "v": "$1,240.00" },
+          { "k": "Payer", "v": "PPO plan" },
+          { "k": "Status", "v": "Denied", "style": "alert" }
+        ],
+        "stamp": "DENIED",
+        "cue": "denied"
+      },
+      "back": {
+        "kicker": "Denial · action plan",
+        "title": "Back on track",
+        "rows": [
+          { "k": "Reason", "v": "Missing X-ray" },
+          { "k": "Owner", "v": "Assigned", "style": "ok", "cue": "owner" },
+          { "k": "Due date", "v": "Friday", "style": "primary", "cue": "due" }
+        ]
+      },
+      "lines": [
+        { "say": "And when a claim gets denied, it doesn't disappear. It gets an owner, and a due date.", "seed": 50 }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "DocsDocs",
+      "post": "different?",
+      "em_cue": "docs",
+      "mark_cue": "different",
+      "lines": [
+        { "say": "So what makes Docs Docs different?", "sub": "So what makes DocsDocs different?", "seed": 51 }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Most billing services",
+      "right_label": "DocsDocs",
+      "rows": [
+        { "left": "Make you fit their process", "right": "Map your process first", "left_cue": "fit", "right_cue": "maps" },
+        { "left": "Make you switch software", "right": "Work with what you have", "left_cue": "switch", "right_cue": "works" },
+        { "left": "All or nothing", "right": "You choose what to hand over", "right_cue": "choose" },
+        { "left": "A black box", "right": "See every claim, owner & due date", "right_cue": "see" }
+      ],
+      "lines": [
+        { "say": "Most billing services make you fit their process. Docs Docs maps yours first.", "sub": "Most billing services make you fit their process. DocsDocs maps yours first.", "seed": 52 },
+        { "say": "Others ask you to switch software. Docs Docs works with what you already use.", "sub": "Others ask you to switch software. DocsDocs works with what you already use.", "seed": 53 },
+        { "say": "You choose which tasks to hand over. And you can see every claim, every owner, every due date.", "seed": 54 }
+      ]
+    },
+    {
+      "type": "end",
+      "chart": {
+        "label": "Insurance AR by age",
+        "bars": [
+          { "label": "0–30 days", "from": 100, "to": 100 },
+          { "label": "31–60", "from": 62, "to": 37 },
+          { "label": "61–90", "from": 38, "to": 17 },
+          { "label": "90+", "from": 22, "to": 7 }
+        ]
+      },
+      "tagline": "Your practice.",
+      "tagline_em": "Your revenue cycle.",
+      "logo_cue": "docs",
+      "tagline_cue": "practice",
+      "lines": [
+        { "say": "Your practice. Your revenue cycle. Docs Docs.", "sub": "Your practice. Your revenue cycle. DocsDocs.", "seed": 55 }
+      ]
+    }
+  ]
+}

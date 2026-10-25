@@ -1,0 +1,168 @@
+name: Make video
+
+# Runs when you push a change inside videos/<name>/ (e.g. edit video.json),
+# or manually from the Actions tab -> "Make video" -> "Run workflow".
+on:
+  push:
+    branches: [main]
+    paths:
+      - "videos/**"
+      - "!videos/**/.voice/**"
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "NEW VIDEO FROM A TOPIC: type a topic (AI writes the script), e.g. How UPI payments work"
+        required: false
+        default: ""
+      notes:
+        description: "Optional notes for the AI: audience, tone, facts to include"
+        required: false
+        default: ""
+      logo:
+        description: "Optional logo image URL (https://...)"
+        required: false
+        default: ""
+      video:
+        description: "OR rebuild an existing folder inside videos/ (leave topic empty), e.g. docsdocs"
+        required: false
+        default: ""
+
+# Needed to commit the voice cache back and to publish the MP4 as a Release
+permissions:
+  contents: write
+
+concurrency:
+  group: make-video
+  cancel-in-progress: false   # queue runs; never kill one halfway
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      videos: ${{ steps.pick.outputs.videos }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: pick
+        name: Decide which videos to build
+        env:
+          TOPIC: ${{ github.event.inputs.topic }}
+          VIDEO: ${{ github.event.inputs.video }}
+        run: |
+          if [ -n "$TOPIC" ]; then
+            list=$(python3 -c "import re,sys;s=re.sub(r'[^a-z0-9]+','-',sys.argv[1].lower()).strip('-');print(s[:40].strip('-') or 'video')" "$TOPIC")
+            echo "videos=[\"$list\"]" >> "$GITHUB_OUTPUT"; echo "New video from topic -> videos/$list"; exit 0
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            list="$VIDEO"
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            list=$(ls videos)
+          else
+            list=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- videos \
+                   | grep -v '/\.voice/' | cut -d/ -f2 | sort -u)
+          fi
+          json="["
+          for v in $list; do
+            if [ -f "videos/$v/video.json" ]; then json="$json\"$v\","; fi
+          done
+          json="${json%,}]"
+          echo "videos=$json" >> "$GITHUB_OUTPUT"
+          echo "Will build: $json"
+
+  render:
+    needs: plan
+    if: needs.plan.outputs.videos != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      max-parallel: 1          # one at a time so voice-cache commits never collide
+      fail-fast: false
+      matrix:
+        video: ${{ fromJSON(needs.plan.outputs.videos) }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Cache AI models (Chatterbox voice)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-chatterbox-0.1.7
+
+      - name: Cache HyperFrames Chrome
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/hyperframes/chrome
+          key: hyperframes-chrome-0.8.181-${{ runner.os }}
+
+      - name: Install Python packages (CPU PyTorch + Chatterbox)
+        run: |
+          pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+
+      - name: Install HyperFrames + Chrome
+        run: |
+          npm ci
+          npx hyperframes browser ensure
+
+      - name: Write the script with AI (topic mode)
+        if: github.event.inputs.topic != ''
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL || 'openai/gpt-oss-120b' }}
+          TOPIC: ${{ github.event.inputs.topic }}
+          NOTES: ${{ github.event.inputs.notes }}
+          LOGO: ${{ github.event.inputs.logo }}
+        run: |
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "::error::Add your Groq key as a repository secret named GROQ_API_KEY (Settings -> Secrets and variables -> Actions)"; exit 1
+          fi
+          python engine/write_script.py "$TOPIC" --folder "${{ matrix.video }}" --notes "$NOTES" --logo "$LOGO"
+          echo "### Script written by AI" >> "$GITHUB_STEP_SUMMARY"
+          python -c "import json;c=json.load(open('videos/${{ matrix.video }}/video.json'));print('\n'.join('- **'+s['type']+'**: '+' '.join(l.get('sub') or l['say'] for l in s['lines']) for s in c['scenes']))" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Make the video
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # used for fast word timing (Groq Whisper)
+        run: python engine/make_video.py "videos/${{ matrix.video }}"
+
+      - name: Save script + voice cache to the repo
+        run: |
+          git config user.name "video-studio-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add "videos/${{ matrix.video }}/video.json" "videos/${{ matrix.video }}/.voice"
+          if ! git diff --quiet --cached; then
+            git commit -m "Video ${{ matrix.video }}: script + voice cache [skip ci]"
+            for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          fi
+
+      - name: Upload MP4 (workflow artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.video }}
+          path: videos/${{ matrix.video }}/out/${{ matrix.video }}.mp4
+
+      - name: Publish MP4 as a Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ matrix.video }}-v${{ github.run_number }}"
+          company=$(python -c "import json;print(json.load(open('videos/${{ matrix.video }}/video.json')).get('company','${{ matrix.video }}'))")
+          gh release create "$tag" "videos/${{ matrix.video }}/out/${{ matrix.video }}.mp4" \
+            --title "$company explainer (run ${{ github.run_number }})" \
+            --notes "Made from \`videos/${{ matrix.video }}/video.json\` at ${{ github.sha }}."

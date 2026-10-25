@@ -1,0 +1,173 @@
+{
+  "company": "Acme",
+  "url": "acme.com",
+  "colors": {
+    "primary": "#5b2be0",
+    "accent": "#b9a6ff",
+    "alert": "#e0475b",
+    "ink": "#1a1433",
+    "background": "#f6f4fd"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Small teams lose hours to",
+      "title_em": "manual busywork.",
+      "alert_word": "busywork.",
+      "icon": "document",
+      "meter_label": "Stress level",
+      "cards": [
+        {
+          "text": "Copying data",
+          "cue": "copying"
+        },
+        {
+          "text": "Chasing approvals",
+          "cue": "chasing"
+        },
+        {
+          "text": "Fixing mistakes",
+          "cue": "fixing"
+        },
+        {
+          "text": "Missing deadlines",
+          "cue": "missing"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Small teams lose hours every week to manual busywork. Copying data. Chasing approvals. Fixing mistakes. Missing deadlines.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "comes",
+      "tagline": "Your busywork,",
+      "tagline_em": "automated.",
+      "tagline_cue": "automates",
+      "photos": [],
+      "tags": [
+        {
+          "text": "Startups",
+          "cue": "startups"
+        },
+        {
+          "text": "Agencies",
+          "cue": "agencies"
+        },
+        {
+          "text": "Growing teams",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "That's where Acme comes in. It automates the busywork for startups, agencies and growing teams.",
+          "sub": "That's where Acme comes in. It automates the busywork for startups, agencies and growing teams.",
+          "seed": 43
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "title": "How it works",
+      "steps": [
+        {
+          "title": "Connect your tools",
+          "chips": [
+            "Email",
+            "Sheets",
+            "CRM"
+          ],
+          "cue": "connect"
+        },
+        {
+          "title": "Pick a workflow",
+          "chips": [
+            "Approvals",
+            "Reports"
+          ],
+          "cue": "pick"
+        },
+        {
+          "title": "Let it run",
+          "chips": [
+            "Alerts",
+            "Audit log"
+          ],
+          "cue": "run"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Connect your tools. Pick a workflow. Then let it run, while you get alerts when something needs you.",
+          "seed": 44
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "Acme",
+      "post": "different?",
+      "em_cue": "acme",
+      "mark_cue": "different",
+      "lines": [
+        {
+          "say": "So what makes Acme different?",
+          "seed": 45
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Other tools",
+      "right_label": "Acme",
+      "rows": [
+        {
+          "left": "Weeks of setup",
+          "right": "Live in one day",
+          "left_cue": "weeks",
+          "right_cue": "day"
+        },
+        {
+          "left": "Needs a developer",
+          "right": "No code at all",
+          "left_cue": "developer",
+          "right_cue": "code"
+        },
+        {
+          "left": "Hidden pricing",
+          "right": "One flat price",
+          "right_cue": "flat"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Other tools take weeks of setup. Acme is live in one day. They need a developer. Acme needs no code at all. And instead of hidden pricing, you pay one flat price.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Less busywork.",
+      "tagline_em": "More work that matters.",
+      "logo_cue": "acme",
+      "tagline_cue": "less",
+      "lines": [
+        {
+          "say": "Less busywork. More work that matters. Acme.",
+          "seed": 47
+        }
+      ]
+    }
+  ]
+}

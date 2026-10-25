@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Video Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#f3f6fb; --card:#fff; --ink:#0d2440; --dim:#5d6f86; --line:#dbe3ee; --pri:#024c87; --acc:#85bbe0; --red:#d64545; --ok:#1f9d6b; --code:#0b1b30; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0b1422; --card:#111d2e; --ink:#e7eef8; --dim:#93a4bb; --line:#22324a; --pri:#6fb0e6; --acc:#3d6f99; --code:#060e1a; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.5 Inter, system-ui, sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 80px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+  h1 { font: 400 44px/1 'Instrument Serif', serif; letter-spacing: -0.01em; }
+  h1 em { color: var(--pri); }
+  .repo { font-size: 13px; color: var(--dim); }
+  .repo a { color: var(--pri); }
+  nav { display: flex; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  nav button { border: 0; background: none; color: var(--dim); font: 600 14px Inter; padding: 8px 18px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+  @media (max-width: 520px) { nav { width: 100%; overflow-x: auto; } nav button { padding: 8px 12px; font-size: 13px; flex: 1; } }
+  nav button.on { background: var(--pri); color: #fff; }
+  .panel { display: none; } .panel.on { display: block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+  .vid video { width: 100%; aspect-ratio: 9/16; border-radius: 12px; background: #000; display: block; }
+  .vid h3 { font: 600 15px Inter; margin: 12px 0 2px; }
+  .vid .meta { color: var(--dim); font-size: 13px; display: flex; justify-content: space-between; gap: 8px; }
+  .vid a { color: var(--pri); font-weight: 600; text-decoration: none; }
+  .empty { color: var(--dim); text-align: center; padding: 50px 10px; }
+  .two { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 14px 0 6px; }
+  label:first-child { margin-top: 0; }
+  input[type=text], input[type=url], textarea { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 14px Inter; }
+  textarea { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; min-height: 520px; resize: vertical; background: var(--code); color: #d7e3f4; border-color: var(--code); }
+  .colors { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .colors div { text-align: center; font-size: 11px; color: var(--dim); }
+  .colors input { width: 100%; height: 38px; border: 1px solid var(--line); border-radius: 8px; background: none; cursor: pointer; padding: 2px; }
+  .hint { font-size: 13px; color: var(--dim); margin-top: 6px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .btn { border: 0; border-radius: 10px; padding: 11px 16px; font: 700 14px Inter; cursor: pointer; background: var(--pri); color: #fff; text-decoration: none; display: inline-block; }
+  .btn.ghost { background: none; color: var(--pri); border: 1px solid var(--line); }
+  .status { margin-top: 12px; font-size: 13px; padding: 10px 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+  .status.bad { color: var(--red); border-color: var(--red); }
+  .status.good { color: var(--ok); }
+  .editorhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .editorhead h2 { font: 400 28px 'Instrument Serif', serif; }
+  details { margin-top: 18px; }
+  summary { cursor: pointer; font-weight: 700; color: var(--pri); }
+  .ref { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+  .ref div { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 13px; }
+  .ref b { color: var(--pri); font-family: ui-monospace, monospace; }
+  .ref code { font-size: 12px; color: var(--dim); }
+  .steps { counter-reset: s; display: grid; gap: 10px; margin-top: 4px; }
+  .steps li { list-style: none; counter-increment: s; padding-left: 34px; position: relative; font-size: 14px; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--pri); color: #fff; font: 700 12px/24px Inter; text-align: center; }
+  .settings { margin-top: 18px; }
+  .hero { max-width: 760px; }
+  input.big { font-size: 20px; padding: 16px 16px; border-radius: 14px; }
+  .more { margin-top: 14px; }
+  .runbox { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; }
+  .runbox > div:nth-child(2) { flex: 1; }
+  .runbox[hidden] { display: none; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--dim); flex: none; }
+  .dot.run { background: #e0a23c; animation: pulse 1.2s ease-in-out infinite; } .dot.ok { background: var(--ok); } .dot.bad { background: var(--red); }
+  @keyframes pulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .dot.run { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Video <em>Studio</em></h1>
+      <div class="repo" id="repoLine">Explainer videos, made by GitHub Actions</div>
+    </div>
+    <nav><button class="on" data-tab="topic">From a topic</button><button data-tab="gallery">Gallery</button><button data-tab="create">Write my own</button><button data-tab="help">How it works</button></nav>
+  </header>
+
+  <section class="panel on" id="topic">
+    <div class="card hero">
+      <label for="t_topic">What should the video explain?</label>
+      <input type="text" id="t_topic" class="big" placeholder="e.g. How UPI payments work in India" maxlength="140" />
+      <details class="more">
+        <summary>Options</summary>
+        <label for="t_notes">Notes for the AI (optional)</label>
+        <input type="text" id="t_notes" placeholder="Audience, tone, facts to include, e.g. for first-time investors, friendly tone" maxlength="300" />
+        <label for="t_logo">Logo image URL (optional)</label>
+        <input type="url" id="t_logo" placeholder="https://example.com/logo.png" />
+        <label for="t_token">GitHub token for one-click runs (optional)</label>
+        <input type="password" id="t_token" placeholder="github_pat_… (stays in this browser only)" autocomplete="off" />
+        <div class="hint">Without a token, the button opens GitHub's <i>Run workflow</i> page and copies your topic so you can paste it.
+          To make it one-click, create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
+          for this repository only, with <b>Actions: Read and write</b>. It is saved only in this browser.</div>
+      </details>
+      <div class="row"><button class="btn" id="t_go">Make the video →</button></div>
+      <div class="status" id="t_status">The AI (Groq, gpt-oss-120b) writes the script, then GitHub Actions records the voice, animates and renders it. About 30 minutes for a new video.</div>
+      <div class="runbox" id="t_run" hidden><div class="dot" id="t_dot"></div><div><b id="t_rtitle">Latest run</b><div class="hint" id="t_rsub"></div></div><a class="btn ghost" id="t_rlink" href="#" target="_blank" rel="noopener">Open</a></div>
+    </div>
+  </section>
+
+  <section class="panel" id="gallery">
+    <div class="grid" id="videos"><div class="empty">Loading videos…</div></div>
+  </section>
+
+  <section class="panel" id="create">
+    <div class="two">
+      <div class="card">
+        <label for="folder">Folder name</label>
+        <input type="text" id="folder" placeholder="acme" />
+        <div class="hint">Lowercase, no spaces. The video lives in <code>videos/&lt;folder&gt;/</code>.</div>
+        <label for="company">Company name</label>
+        <input type="text" id="company" placeholder="Acme" />
+        <label for="url">Website</label>
+        <input type="text" id="url" placeholder="acme.com" />
+        <label for="logo">Logo (image URL or file name)</label>
+        <input type="text" id="logo" placeholder="https://acme.com/logo.png" />
+        <div class="hint">Leave empty to show the company name as text. A file name means you upload it into the folder.</div>
+        <label>Brand colours</label>
+        <div class="colors">
+          <div><input type="color" id="c_primary" value="#024c87" />Primary</div>
+          <div><input type="color" id="c_accent" value="#85bbe0" />Accent</div>
+          <div><input type="color" id="c_alert" value="#d64545" />Alert</div>
+          <div><input type="color" id="c_ink" value="#0d2440" />Text</div>
+          <div><input type="color" id="c_background" value="#f3f6fb" />Background</div>
+        </div>
+        <div class="row">
+          <button class="btn" id="publish">Create on GitHub →</button>
+          <button class="btn ghost" id="download">Download video.json</button>
+        </div>
+        <div class="status" id="status">Fill in the basics, then edit the script on the right.</div>
+        <div class="settings">
+          <details>
+            <summary>Repository settings</summary>
+            <label for="owner">GitHub owner</label><input type="text" id="owner" placeholder="gnoknwgnng" />
+            <label for="repo">Repository</label><input type="text" id="repo" placeholder="video-studio" />
+            <div class="hint">Filled in automatically when this page runs on GitHub Pages.</div>
+          </details>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="editorhead">
+          <h2>Script &amp; scenes</h2>
+          <div class="row" style="margin:0">
+            <button class="btn ghost" id="starter">Starter template</button>
+            <button class="btn ghost" id="example">DocsDocs example</button>
+          </div>
+        </div>
+        <textarea id="scenes" spellcheck="false"></textarea>
+        <div class="hint" id="estimate"></div>
+        <details>
+          <summary>Scene types and their fields</summary>
+          <div class="ref">
+            <div><b>problem</b><br/>Icon storm + up to 4 pain cards that flip in on cue words.<br/><code>kicker, title, title_em, alert_word, icon (tooth, document, heart, shield, building, box, chip), meter_label, cards[{text, cue}]</code></div>
+            <div><b>stats</b><br/>Animated bars + "1 in N" people callout.<br/><code>label, bars[{name, value, display, cue}], callout{em, text, people, empty, cue, empty_cue}</code></div>
+            <div><b>intro</b><br/>Big logo, tagline, 0–2 photos, audience tags.<br/><code>logo_cue, tagline, tagline_em, tagline_cue, photos[], tags[{text, cue, highlight}]</code></div>
+            <div><b>steps</b><br/>2–4 numbered steps on a timeline with chips.<br/><code>title, steps[{title, chips[], cue}]</code></div>
+            <div><b>flip</b><br/>A card that gets stamped, then flips to the fix.<br/><code>title, title_em, front{kicker, title, rows[{k, v, style}], stamp, cue}, back{kicker, title, rows[{k, v, style, cue}]}</code> · style: alert, ok, primary</div>
+            <div><b>question</b><br/>"So what makes X different?"<br/><code>pre, em, post, em_cue, mark_cue</code></div>
+            <div><b>compare</b><br/>Up to 4 rows: others vs you.<br/><code>left_label, right_label, rows[{left, right, left_cue, right_cue}]</code></div>
+            <div><b>end</b><br/>Optional shrinking bar chart, logo, tagline, URL.<br/><code>chart{label, bars[{label, from, to}]}, tagline, tagline_em, logo_cue, tagline_cue</code></div>
+            <div><b>lines</b> (every scene)<br/>What the voice says in that scene.<br/><code>[{say, sub, seed}]</code> · <code>say</code> is spoken, <code>sub</code> is the subtitle (defaults to say). Spell names how they sound, e.g. "Docs, Docs". Change <code>seed</code> to re-roll a line.</div>
+            <div><b>cue</b> words<br/>A word from that scene's lines. The animation fires the moment the voice says it.</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="help">
+    <div class="card">
+      <ol class="steps">
+        <li><b>From a topic</b>: type a topic and press <i>Make the video</i>. The AI writes the script (saved as <code>videos/&lt;topic&gt;/video.json</code> so you can edit it later) and the workflow builds the video.</li>
+        <li><b>Write my own</b>: fill in the form and script, then press <i>Create on GitHub</i>. GitHub opens with <code>videos/&lt;folder&gt;/video.json</code> filled in; press <i>Commit changes</i>.</li>
+        <li>The commit starts the <b>Make video</b> workflow in the Actions tab. It writes the voice with Chatterbox, times every animation to the spoken words, adds sound design and renders the MP4.</li>
+        <li>About 15–20 minutes for the first run of a new video (voice on CPU), then about 5 minutes when you only change visuals: voice lines are cached in the repo.</li>
+        <li>The finished MP4 appears in the <b>Gallery</b> here and under <b>Releases</b> on GitHub.</li>
+        <li>To change a video, edit its <code>video.json</code> on GitHub and commit. To rebuild without changes: Actions → Make video → Run workflow.</li>
+      </ol>
+      <div class="row"><a class="btn" id="actionsLink" href="#" target="_blank" rel="noopener">Open Actions</a><a class="btn ghost" id="releasesLink" href="#" target="_blank" rel="noopener">Releases</a></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const STARTER = [
+  { type: "problem", kicker: "The problem", title: "Small teams lose hours to", title_em: "manual busywork.", alert_word: "busywork.", icon: "document", meter_label: "Stress level",
+    cards: [ { text: "Copying data", cue: "copying" }, { text: "Chasing approvals", cue: "chasing" }, { text: "Fixing mistakes", cue: "fixing" }, { text: "Missing deadlines", cue: "missing" } ],
+    lines: [ { say: "Small teams lose hours every week to manual busywork. Copying data. Chasing approvals. Fixing mistakes. Missing deadlines.", seed: 42 } ] },
+  { type: "intro", logo_cue: "comes", tagline: "Your busywork,", tagline_em: "automated.", tagline_cue: "automates", photos: [],
+    tags: [ { text: "Startups", cue: "startups" }, { text: "Agencies", cue: "agencies" }, { text: "Growing teams", highlight: true } ],
+    lines: [ { say: "That's where Acme comes in. It automates the busywork for startups, agencies and growing teams.", sub: "That's where Acme comes in. It automates the busywork for startups, agencies and growing teams.", seed: 43 } ] },
+  { type: "steps", title: "How it works",
+    steps: [ { title: "Connect your tools", chips: ["Email", "Sheets", "CRM"], cue: "connect" }, { title: "Pick a workflow", chips: ["Approvals", "Reports"], cue: "pick" }, { title: "Let it run", chips: ["Alerts", "Audit log"], cue: "run" } ],
+    lines: [ { say: "Connect your tools. Pick a workflow. Then let it run, while you get alerts when something needs you.", seed: 44 } ] },
+  { type: "question", pre: "So what makes", em: "Acme", post: "different?", em_cue: "acme", mark_cue: "different",
+    lines: [ { say: "So what makes Acme different?", seed: 45 } ] },
+  { type: "compare", left_label: "Other tools", right_label: "Acme",
+    rows: [ { left: "Weeks of setup", right: "Live in one day", left_cue: "weeks", right_cue: "day" }, { left: "Needs a developer", right: "No code at all", left_cue: "developer", right_cue: "code" }, { left: "Hidden pricing", right: "One flat price", right_cue: "flat" } ],
+    lines: [ { say: "Other tools take weeks of setup. Acme is live in one day. They need a developer. Acme needs no code at all. And instead of hidden pricing, you pay one flat price.", seed: 46 } ] },
+  { type: "end", tagline: "Less busywork.", tagline_em: "More work that matters.", logo_cue: "acme", tagline_cue: "less",
+    lines: [ { say: "Less busywork. More work that matters. Acme.", seed: 47 } ] }
+];
+const TYPES = ["problem", "stats", "intro", "steps", "flip", "question", "compare", "end"];
+const $ = id => document.getElementById(id);
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+// ---- repo detection (owner.github.io/repo) ----
+function detectRepo() {
+  const h = location.hostname, parts = location.pathname.split("/").filter(Boolean);
+  if (h.endsWith(".github.io")) return { owner: h.split(".")[0], repo: parts[0] || h };
+  // default for local use; on GitHub Pages the repo is detected from the URL above
+  return { owner: store.get("vs_owner") || "gnoknwgnng", repo: store.get("vs_repo") || "video-studio" };
+}
+let R = detectRepo();
+$("owner").value = R.owner; $("repo").value = R.repo;
+["owner", "repo"].forEach(k => $(k).addEventListener("change", () => { R[k] = $(k).value.trim(); store.set("vs_" + k, R[k]); refreshLinks(); loadGallery(); }));
+function refreshLinks() {
+  const base = R.owner && R.repo ? `https://github.com/${R.owner}/${R.repo}` : "https://github.com";
+  $("actionsLink").href = base + "/actions/workflows/make-video.yml";
+  $("releasesLink").href = base + "/releases";
+  $("repoLine").innerHTML = R.owner && R.repo ? `Explainer videos from <a href="${base}" target="_blank" rel="noopener">${R.owner}/${R.repo}</a>, made by GitHub Actions` : "Set your repository under <b>Write my own → Repository settings</b>";
+}
+refreshLinks();
+
+// ---- tabs ----
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.tab));
+}));
+
+// ---- gallery ----
+async function loadGallery() {
+  const box = $("videos");
+  if (!R.owner || !R.repo) { box.innerHTML = '<div class="empty">Set your GitHub owner and repository under Write my own → Repository settings.</div>'; return; }
+  try {
+    const res = await fetch(`https://api.github.com/repos/${R.owner}/${R.repo}/releases?per_page=60`);
+    if (!res.ok) throw new Error(res.status === 404 ? "Repository not found, or it is private." : "GitHub API error " + res.status);
+    const rel = (await res.json()).map(r => ({ r, a: (r.assets || []).find(a => a.name.endsWith(".mp4")) })).filter(x => x.a);
+    if (!rel.length) { box.innerHTML = '<div class="empty">No videos yet. Create one under <b>New video</b>; it appears here when the workflow finishes.</div>'; return; }
+    box.innerHTML = "";
+    for (const { r, a } of rel) {
+      const d = document.createElement("div"); d.className = "card vid";
+      d.innerHTML = `<video controls preload="metadata" playsinline src="${a.browser_download_url}"></video>
+        <h3></h3><div class="meta"><span>${new Date(r.published_at).toLocaleDateString()}</span><a href="${a.browser_download_url}">Download</a></div>`;
+      d.querySelector("h3").textContent = r.name || r.tag_name;
+      box.appendChild(d);
+    }
+  } catch (e) { box.innerHTML = `<div class="empty">${e.message}</div>`; }
+}
+loadGallery();
+
+// ---- editor ----
+function setScenes(s) { $("scenes").value = JSON.stringify(s, null, 2); check(); }
+const saved = store.get("vs_draft");
+if (saved) { try { const d = JSON.parse(saved); ["folder", "company", "url", "logo"].forEach(k => $(k).value = d[k] || ""); $("scenes").value = d.scenes || ""; Object.entries(d.colors || {}).forEach(([k, v]) => { if ($("c_" + k)) $("c_" + k).value = v; }); } catch (e) {} }
+if (!$("scenes").value.trim()) setScenes(STARTER);
+$("starter").addEventListener("click", () => setScenes(STARTER));
+$("example").addEventListener("click", async () => {
+  try {
+    const owner = R.owner || "gnoknwgnng", repo = R.repo || "video-studio";
+    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/videos/docsdocs/video.json`);
+    if (!res.ok) throw new Error();
+    const cfg = await res.json();
+    $("folder").value = "docsdocs-copy"; $("company").value = cfg.company || ""; $("url").value = cfg.url || "";
+    $("logo").value = cfg.logo || ""; Object.entries(cfg.colors || {}).forEach(([k, v]) => { if ($("c_" + k)) $("c_" + k).value = v; });
+    setScenes(cfg.scenes);
+  } catch (e) { status("Could not load the example. Set your repository first, and make sure videos/docsdocs/video.json is pushed.", "bad"); }
+});
+["folder", "company", "url", "logo", "scenes", "c_primary", "c_accent", "c_alert", "c_ink", "c_background"].forEach(id => $(id).addEventListener("input", check));
+
+function status(msg, kind) { const s = $("status"); s.className = "status " + (kind || ""); s.innerHTML = msg; }
+
+function build() {
+  const scenes = JSON.parse($("scenes").value);
+  const colors = {}; ["primary", "accent", "alert", "ink", "background"].forEach(k => colors[k] = $("c_" + k).value);
+  const cfg = { company: $("company").value.trim(), url: $("url").value.trim(), colors, voice: { exaggeration: 0.6, cfg_weight: 0.45 }, scenes };
+  if ($("logo").value.trim()) cfg.logo = $("logo").value.trim();
+  return cfg;
+}
+
+function check() {
+  store.set("vs_draft", JSON.stringify({ folder: $("folder").value, company: $("company").value, url: $("url").value, logo: $("logo").value, scenes: $("scenes").value,
+    colors: Object.fromEntries(["primary", "accent", "alert", "ink", "background"].map(k => [k, $("c_" + k).value])) }));
+  let cfg;
+  try { cfg = build(); } catch (e) { status("The script is not valid JSON: " + e.message, "bad"); $("estimate").textContent = ""; return null; }
+  const errs = [];
+  if (!/^[a-z0-9][a-z0-9-]*$/.test($("folder").value.trim())) errs.push("Folder name: lowercase letters, numbers and dashes only.");
+  if (!cfg.company) errs.push("Add the company name.");
+  if (!Array.isArray(cfg.scenes) || !cfg.scenes.length) errs.push("Add at least one scene.");
+  let words = 0;
+  (cfg.scenes || []).forEach((s, i) => {
+    if (!TYPES.includes(s.type)) errs.push(`Scene ${i + 1}: unknown type "${s.type}".`);
+    if (!Array.isArray(s.lines) || !s.lines.length || s.lines.some(l => !l.say)) errs.push(`Scene ${i + 1}: needs lines with "say".`);
+    (s.lines || []).forEach(l => words += (l.say || "").split(/\s+/).filter(Boolean).length);
+  });
+  const secs = Math.round(words / 2.5 + (cfg.scenes || []).length * 0.8 + 3);
+  $("estimate").textContent = `${(cfg.scenes || []).length} scenes · ${words} spoken words · about ${secs}s of video`;
+  if (errs.length) { status(errs.join("<br/>"), "bad"); return null; }
+  status("Looks good. Press <b>Create on GitHub</b>, then <b>Commit changes</b> on the page that opens.", "good");
+  return cfg;
+}
+check();
+
+$("download").addEventListener("click", () => {
+  const cfg = check(); if (!cfg) return;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(cfg, null, 2)], { type: "application/json" }));
+  a.download = "video.json"; a.click();
+});
+$("publish").addEventListener("click", () => {
+  const cfg = check(); if (!cfg) return;
+  if (!R.owner || !R.repo) { status("Set your GitHub owner and repository under Repository settings first.", "bad"); return; }
+  const folder = $("folder").value.trim();
+  const url = `https://github.com/${R.owner}/${R.repo}/new/main?filename=${encodeURIComponent("videos/" + folder + "/video.json")}&value=${encodeURIComponent(JSON.stringify(cfg, null, 2))}`;
+  if (url.length > 60000) { status("This script is too long to send in a link. Use <b>Download video.json</b> and upload it to <code>videos/" + folder + "/</code> on GitHub instead.", "bad"); return; }
+  window.open(url, "_blank", "noopener");
+  status(`GitHub opened in a new tab. Press <b>Commit changes</b> there, then follow progress in <a href="https://github.com/${R.owner}/${R.repo}/actions/workflows/make-video.yml" target="_blank" rel="noopener">Actions</a>.`, "good");
+});
+// ---- topic mode ----
+const TOKEN_KEY = "vs_token";
+if (store.get(TOKEN_KEY)) $("t_token").value = store.get(TOKEN_KEY);
+$("t_token").addEventListener("change", () => store.set(TOKEN_KEY, $("t_token").value.trim()));
+const wfUrl = () => `https://github.com/${R.owner}/${R.repo}/actions/workflows/make-video.yml`;
+function tStatus(msg, kind) { const el = $("t_status"); el.className = "status " + (kind || ""); el.innerHTML = msg; }
+$("t_topic").addEventListener("keydown", e => { if (e.key === "Enter") $("t_go").click(); });
+$("t_go").addEventListener("click", async () => {
+  const topic = $("t_topic").value.trim(), notes = $("t_notes").value.trim(), logo = $("t_logo").value.trim(), token = $("t_token").value.trim();
+  if (topic.length < 4) { tStatus("Type a topic first, e.g. <i>How UPI payments work in India</i>.", "bad"); return; }
+  if (!R.owner || !R.repo) { tStatus("Set your GitHub owner and repository under <b>Write my own → Repository settings</b>.", "bad"); return; }
+  if (logo && !/^https:\/\//.test(logo)) { tStatus("The logo must be an https:// image URL.", "bad"); return; }
+  if (!token) {
+    try { await navigator.clipboard.writeText(topic); } catch (e) {}
+    window.open(wfUrl(), "_blank", "noopener");
+    tStatus(`GitHub opened. Click <b>Run workflow</b>, paste your topic into the first box (it's on your clipboard), then press the green <b>Run workflow</b>.`, "good");
+    watchRuns(); return;
+  }
+  $("t_go").disabled = true; tStatus("Starting…");
+  try {
+    const res = await fetch(`https://api.github.com/repos/${R.owner}/${R.repo}/actions/workflows/make-video.yml/dispatches`, {
+      method: "POST", headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json" },
+      body: JSON.stringify({ ref: "main", inputs: { topic, notes, logo, video: "" } }) });
+    if (res.status === 204) { tStatus("Started. The AI is writing the script; the video follows. This page shows progress below.", "good"); watchRuns(true); }
+    else if (res.status === 401 || res.status === 403) tStatus("GitHub refused the token. It needs <b>Actions: Read and write</b> on this repository.", "bad");
+    else if (res.status === 404) tStatus("Workflow not found. Check owner/repo, and that the token can access this repository.", "bad");
+    else tStatus("GitHub error " + res.status + ": " + (await res.text()).slice(0, 200), "bad");
+  } catch (e) { tStatus("Network error: " + e.message, "bad"); }
+  $("t_go").disabled = false;
+});
+let runTimer = null;
+async function watchRuns(fresh) {
+  if (!R.owner || !R.repo) return;
+  $("t_run").hidden = false; clearTimeout(runTimer);
+  try {
+    const r = await fetch(`https://api.github.com/repos/${R.owner}/${R.repo}/actions/workflows/make-video.yml/runs?per_page=1`);
+    const run = r.ok ? (await r.json()).workflow_runs[0] : null;
+    if (run) {
+      const done = run.status === "completed", ok = run.conclusion === "success";
+      $("t_dot").className = "dot " + (done ? (ok ? "ok" : "bad") : "run");
+      $("t_rtitle").textContent = `Run #${run.run_number}: ` + (done ? (ok ? "finished" : (run.conclusion || "failed")) : run.status.replace("_", " "));
+      $("t_rsub").textContent = `Started ${new Date(run.created_at).toLocaleTimeString()}` + (done && ok ? " · the video is in the Gallery" : "");
+      $("t_rlink").href = run.html_url;
+      if (done && ok) loadGallery();
+      if (!done || fresh) runTimer = setTimeout(() => watchRuns(false), 20000);
+    } else { $("t_rtitle").textContent = "No runs yet"; runTimer = setTimeout(() => watchRuns(false), 20000); }
+  } catch (e) { runTimer = setTimeout(() => watchRuns(false), 30000); }
+}
+if (R.owner && R.repo) watchRuns(false);
+</script>
+</body>
+</html>

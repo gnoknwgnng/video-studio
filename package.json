@@ -1,0 +1,13 @@
+{
+  "name": "docsdocs-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview": "hyperframes preview",
+    "check": "hyperframes check",
+    "render": "hyperframes render -o DocsDocs_Explainer.mp4"
+  },
+  "devDependencies": {
+    "hyperframes": "0.8.181"
+  }
+}
