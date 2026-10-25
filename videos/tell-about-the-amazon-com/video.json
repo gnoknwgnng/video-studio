@@ -1,0 +1,183 @@
+{
+  "company": "Amazon",
+  "url": "https://www.amazon.com",
+  "colors": {
+    "primary": "#FF9900",
+    "accent": "#FFB84D",
+    "alert": "#D9534F",
+    "ink": "#232F3E",
+    "background": "#F5F5F5"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Online shopping is",
+      "title_em": "getting overwhelming.",
+      "alert_word": "overwhelming.",
+      "icon": "box",
+      "meter_label": "Stress level",
+      "cards": [
+        {
+          "text": "Finding deals",
+          "cue": "deals"
+        },
+        {
+          "text": "Comparing reviews",
+          "cue": "reviews"
+        },
+        {
+          "text": "Fast shipping",
+          "cue": "shipping"
+        },
+        {
+          "text": "Secure checkout",
+          "cue": "checkout"
+        }
+      ],
+      "lines": [
+        {
+          "say": "For shoppers, online shopping is getting overwhelming. Deals. Reviews. Shipping. Checkout.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "stats",
+      "label": "U.S. e‑commerce share",
+      "bars": [
+        {
+          "name": "Amazon",
+          "value": 38.0,
+          "display": "38%",
+          "cue": "amazon"
+        },
+        {
+          "name": "Other retailers",
+          "value": 62.0,
+          "display": "62%",
+          "cue": "others"
+        }
+      ],
+      "callout": {
+        "em": "1 in 3",
+        "text": "Americans shop on Amazon",
+        "people": 3,
+        "empty": 1,
+        "cue": "three",
+        "empty_cue": "americans"
+      },
+      "lines": [
+        {
+          "say": "Amazon holds about 38% of U.S. e‑commerce, while others share the rest, and one in three Americans shop on the site.",
+          "seed": 43
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "comes",
+      "tagline": "Everything you need",
+      "tagline_em": "in one place",
+      "tagline_cue": "everything",
+      "photos": [],
+      "tags": [
+        {
+          "text": "Busy families",
+          "cue": "families"
+        },
+        {
+          "text": "Tech enthusiasts",
+          "cue": "tech"
+        },
+        {
+          "text": "Small businesses",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "That's where Amazon comes in. Everything you need, in one place, for busy families, tech enthusiasts, and small businesses.",
+          "seed": 44
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "title": "How it works",
+      "steps": [
+        {
+          "title": "Browse & select",
+          "chips": [
+            "Search",
+            "Filters",
+            "Recommendations"
+          ],
+          "cue": "browse"
+        },
+        {
+          "title": "Add to cart",
+          "chips": [
+            "Cart",
+            "Wish list"
+          ],
+          "cue": "add"
+        },
+        {
+          "title": "Fast delivery",
+          "chips": [
+            "Prime",
+            "Tracking",
+            "Returns"
+          ],
+          "cue": "fast"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Browse millions of products with search, filters and recommendations.",
+          "seed": 45
+        },
+        {
+          "say": "Add items to your cart or save them for later.",
+          "seed": 46
+        },
+        {
+          "say": "Fast delivery arrives with Prime tracking and easy returns.",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "Amazon",
+      "post": "different?",
+      "em_cue": "Amazon",
+      "mark_cue": "different",
+      "lines": [
+        {
+          "say": "So what makes Amazon different?",
+          "seed": 48
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Shop smarter",
+      "tagline_em": "every day",
+      "logo_cue": "Amazon",
+      "tagline_cue": "Shop",
+      "lines": [
+        {
+          "say": "Shop smarter every day, Amazon.",
+          "seed": 49
+        }
+      ]
+    }
+  ]
+}
