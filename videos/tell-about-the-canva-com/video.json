@@ -1,0 +1,199 @@
+{
+  "company": "Canva",
+  "url": "https://www.canva.com",
+  "colors": {
+    "primary": "#00C4CC",
+    "accent": "#66E5E5",
+    "alert": "#E53935",
+    "ink": "#212121",
+    "background": "#F5F7FA"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "images": {
+    "logo_domain": "canva.com"
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Design work is",
+      "title_em": "creators' biggest hassle.",
+      "alert_word": "hassle.",
+      "icon": "document",
+      "meter_label": "Design stress",
+      "cards": [
+        {
+          "text": "Finding templates",
+          "cue": "templates"
+        },
+        {
+          "text": "Aligning elements",
+          "cue": "aligning"
+        },
+        {
+          "text": "Choosing fonts",
+          "cue": "fonts"
+        },
+        {
+          "text": "Exporting files",
+          "cue": "exporting"
+        }
+      ],
+      "image_query": "person frustrated with design software",
+      "lines": [
+        {
+          "say": "For anyone making graphics, design work is creators' biggest hassle. Finding templates. Aligning elements. Choosing fonts. Exporting files.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "comes",
+      "tagline": "Designs fast, beautiful,",
+      "tagline_em": "anywhere.",
+      "tagline_cue": "designs",
+      "image_queries": [
+        "people collaborating on laptop",
+        "colorful marketing flyer on tablet"
+      ],
+      "tags": [
+        {
+          "text": "Marketers",
+          "cue": "marketers"
+        },
+        {
+          "text": "Small businesses",
+          "cue": "small"
+        },
+        {
+          "text": "Educators",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "That's where Canva comes in. Designs fast, beautiful, anywhere for marketers, small businesses, and educators.",
+          "seed": 43
+        }
+      ],
+      "photos": []
+    },
+    {
+      "type": "steps",
+      "title": "How it works",
+      "steps": [
+        {
+          "title": "Start a project",
+          "chips": [
+            "Choose template",
+            "Add brand colors"
+          ],
+          "cue": "start"
+        },
+        {
+          "title": "Edit your design",
+          "chips": [
+            "Drag‑drop",
+            "Resize"
+          ],
+          "cue": "edit"
+        },
+        {
+          "title": "Share or download",
+          "chips": [
+            "Export PNG",
+            "Publish link"
+          ],
+          "cue": "share"
+        }
+      ],
+      "image_query": "designer using laptop template",
+      "lines": [
+        {
+          "say": "Start by choosing a template and adding your brand colors.",
+          "seed": 44
+        },
+        {
+          "say": "Edit your design with drag‑drop tools and easy resizing.",
+          "seed": 45
+        },
+        {
+          "say": "Share or download as PNG, PDF, or a live link.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "Canva",
+      "post": "different?",
+      "em_cue": "canva",
+      "mark_cue": "different",
+      "image_query": "team brainstorming on screen",
+      "lines": [
+        {
+          "say": "So what makes Canva different?",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Traditional design tools",
+      "right_label": "Canva",
+      "rows": [
+        {
+          "left": "Steep learning curve",
+          "right": "Intuitive drag‑and‑drop",
+          "left_cue": "steep",
+          "right_cue": "intuitive"
+        },
+        {
+          "left": "Expensive subscriptions",
+          "right": "Free tier + affordable upgrades",
+          "left_cue": "expensive",
+          "right_cue": "free"
+        },
+        {
+          "left": "Limited collaboration",
+          "right": "Real‑time team editing",
+          "left_cue": "limited",
+          "right_cue": "real"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Traditional design tools have a steep learning curve. Canva offers an intuitive drag‑and‑drop interface.",
+          "seed": 48
+        },
+        {
+          "say": "Most programs require expensive subscriptions. Canva provides a free tier and affordable upgrades.",
+          "seed": 49
+        },
+        {
+          "say": "Collaboration is limited in other apps. Canva enables real‑time team editing.",
+          "seed": 50
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Design made simple",
+      "tagline_em": "for everyone",
+      "logo_cue": "canva",
+      "tagline_cue": "design",
+      "image_query": "happy user sharing design on phone",
+      "lines": [
+        {
+          "say": "Design made simple for everyone. Canva.",
+          "seed": 51
+        }
+      ]
+    }
+  ]
+}
