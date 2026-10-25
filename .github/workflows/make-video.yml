@@ -84,16 +84,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
+        id: py
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
 
       - name: Install FFmpeg
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
@@ -110,15 +109,36 @@ jobs:
           path: ~/.cache/hyperframes/chrome
           key: hyperframes-chrome-0.8.181-${{ runner.os }}
 
-      - name: Install Python packages (CPU PyTorch + Chatterbox)
-        run: |
-          pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
-          pip install -r requirements.txt
+      - name: Restore installed Python environment
+        id: venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ steps.py.outputs.python-version }}-${{ hashFiles('requirements.txt') }}-torch260cpu
 
-      - name: Install HyperFrames + Chrome
+      - name: Install Python packages (first run only)
+        if: steps.venv.outputs.cache-hit != 'true'
         run: |
-          npm ci
-          npx hyperframes browser ensure
+          python -m venv .venv
+          .venv/bin/pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          .venv/bin/pip install -r requirements.txt
+
+      - name: Use the installed Python environment
+        run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Restore installed Node packages
+        id: nm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install HyperFrames (first run only)
+        if: steps.nm.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Make sure Chrome is ready
+        run: npx hyperframes browser ensure
 
       - name: Write the script with AI (topic mode)
         if: github.event.inputs.topic != ''
