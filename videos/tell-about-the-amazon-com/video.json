@@ -2,53 +2,58 @@
   "company": "Amazon",
   "url": "https://www.amazon.com",
   "colors": {
-    "primary": "#FF9900",
-    "accent": "#FFB84D",
-    "alert": "#D9534F",
-    "ink": "#232F3E",
+    "primary": "#232F3E",
+    "accent": "#FF9900",
+    "alert": "#D32F2F",
+    "ink": "#0A0A0A",
     "background": "#F5F5F5"
   },
   "voice": {
     "exaggeration": 0.6,
     "cfg_weight": 0.45
   },
+  "images": {
+    "logo_domain": "amazon.com",
+    "site_photos": true
+  },
   "scenes": [
     {
       "type": "problem",
       "kicker": "The problem",
-      "title": "Online shopping is",
-      "title_em": "getting overwhelming.",
-      "alert_word": "overwhelming.",
+      "title": "Finding the right product is",
+      "title_em": "a shopper's nightmare.",
+      "alert_word": "nightmare.",
       "icon": "box",
-      "meter_label": "Stress level",
+      "meter_label": "Frustration level",
       "cards": [
         {
-          "text": "Finding deals",
-          "cue": "deals"
+          "text": "Too many options",
+          "cue": "options"
         },
         {
-          "text": "Comparing reviews",
+          "text": "Fake reviews",
           "cue": "reviews"
         },
         {
-          "text": "Fast shipping",
+          "text": "Slow shipping",
           "cue": "shipping"
         },
         {
-          "text": "Secure checkout",
-          "cue": "checkout"
+          "text": "Complex returns",
+          "cue": "returns"
         }
       ],
+      "image_query": "overwhelmed shopper phone browsing",
       "lines": [
         {
-          "say": "For shoppers, online shopping is getting overwhelming. Deals. Reviews. Shipping. Checkout.",
+          "say": "For shoppers, finding the right product is a shopper's nightmare. Too many options. Fake reviews. Slow shipping. Complex returns.",
           "seed": 42
         }
       ]
     },
     {
       "type": "stats",
-      "label": "U.S. e‑commerce share",
+      "label": "US e‑commerce market share 2023",
       "bars": [
         {
           "name": "Amazon",
@@ -57,34 +62,37 @@
           "cue": "amazon"
         },
         {
-          "name": "Other retailers",
-          "value": 62.0,
-          "display": "62%",
-          "cue": "others"
+          "name": "Walmart",
+          "value": 10.0,
+          "display": "10%",
+          "cue": "walmart"
         }
       ],
       "callout": {
         "em": "1 in 3",
-        "text": "Americans shop on Amazon",
+        "text": "online shoppers use Amazon",
         "people": 3,
         "empty": 1,
-        "cue": "three",
-        "empty_cue": "americans"
+        "cue": "shoppers",
+        "empty_cue": "others"
       },
       "lines": [
         {
-          "say": "Amazon holds about 38% of U.S. e‑commerce, while others share the rest, and one in three Americans shop on the site.",
+          "say": "Amazon holds about 38% of US e‑commerce sales, while Walmart is at 10%, and one in three online shoppers use Amazon, while others shop elsewhere.",
           "seed": 43
         }
       ]
     },
     {
       "type": "intro",
-      "logo_cue": "comes",
+      "logo_cue": "brings",
       "tagline": "Everything you need",
-      "tagline_em": "in one place",
+      "tagline_em": "delivered.",
       "tagline_cue": "everything",
-      "photos": [],
+      "image_queries": [
+        "person browsing online store laptop",
+        "Amazon fulfillment center robots"
+      ],
       "tags": [
         {
           "text": "Busy families",
@@ -101,53 +109,53 @@
       ],
       "lines": [
         {
-          "say": "That's where Amazon comes in. Everything you need, in one place, for busy families, tech enthusiasts, and small businesses.",
+          "say": "That's where Amazon brings everything you need, delivered for busy families, tech enthusiasts, and small businesses.",
           "seed": 44
         }
-      ]
+      ],
+      "photos": []
     },
     {
       "type": "steps",
       "title": "How it works",
       "steps": [
         {
-          "title": "Browse & select",
+          "title": "Search & compare",
           "chips": [
-            "Search",
             "Filters",
-            "Recommendations"
+            "Ratings"
           ],
-          "cue": "browse"
+          "cue": "search"
         },
         {
-          "title": "Add to cart",
+          "title": "Fast checkout",
           "chips": [
-            "Cart",
-            "Wish list"
+            "One‑Click",
+            "Prime"
           ],
-          "cue": "add"
+          "cue": "checkout"
         },
         {
-          "title": "Fast delivery",
+          "title": "Rapid delivery",
           "chips": [
-            "Prime",
-            "Tracking",
-            "Returns"
+            "Same‑day",
+            "Tracking"
           ],
-          "cue": "fast"
+          "cue": "delivery"
         }
       ],
+      "image_query": "hand using smartphone shopping app",
       "lines": [
         {
-          "say": "Browse millions of products with search, filters and recommendations.",
+          "say": "Search thousands of items, filter by price and read ratings.",
           "seed": 45
         },
         {
-          "say": "Add items to your cart or save them for later.",
+          "say": "Checkout with One‑Click and enjoy Prime benefits.",
           "seed": 46
         },
         {
-          "say": "Fast delivery arrives with Prime tracking and easy returns.",
+          "say": "Delivery arrives same‑day with real‑time tracking.",
           "seed": 47
         }
       ]
@@ -157,8 +165,9 @@
       "pre": "So what makes",
       "em": "Amazon",
       "post": "different?",
-      "em_cue": "Amazon",
+      "em_cue": "amazon",
       "mark_cue": "different",
+      "image_query": "person thinking about online shopping",
       "lines": [
         {
           "say": "So what makes Amazon different?",
@@ -167,15 +176,55 @@
       ]
     },
     {
+      "type": "compare",
+      "left_label": "Traditional retailers",
+      "right_label": "Amazon",
+      "rows": [
+        {
+          "left": "Limited inventory",
+          "right": "Millions of items",
+          "left_cue": "limited",
+          "right_cue": "millions"
+        },
+        {
+          "left": "In‑store only",
+          "right": "Online 24/7",
+          "left_cue": "in‑store",
+          "right_cue": "online"
+        },
+        {
+          "left": "Fixed shipping cost",
+          "right": "Free Prime shipping",
+          "left_cue": "fixed",
+          "right_cue": "free"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Traditional retailers have limited inventory, while Amazon offers millions of items.",
+          "seed": 49
+        },
+        {
+          "say": "They operate in‑store only, but Amazon is online 24/7.",
+          "seed": 50
+        },
+        {
+          "say": "Shipping costs are fixed, whereas Amazon provides free Prime shipping.",
+          "seed": 51
+        }
+      ]
+    },
+    {
       "type": "end",
       "tagline": "Shop smarter",
       "tagline_em": "every day",
-      "logo_cue": "Amazon",
-      "tagline_cue": "Shop",
+      "logo_cue": "amazon",
+      "tagline_cue": "shop",
+      "image_query": "package delivered doorstep",
       "lines": [
         {
-          "say": "Shop smarter every day, Amazon.",
-          "seed": 49
+          "say": "Shop smarter, every day. Amazon.",
+          "seed": 52
         }
       ]
     }
