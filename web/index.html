@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Video Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#f3f6fb; --card:#fff; --ink:#0d2440; --dim:#5d6f86; --line:#dbe3ee; --pri:#024c87; --pri-ink:#fff; --soft:#e7eef7; --red:#c63d3d; --ok:#1f8a5f; --warn:#c7871f; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1422; --card:#111d2e; --ink:#e7eef8; --dim:#93a4bb; --line:#22324a; --pri:#6fb0e6; --pri-ink:#071322; --soft:#16263c; --red:#ef7b7b; --ok:#4fc79a; --warn:#e3b05a; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.5 Inter, system-ui, sans-serif; min-height: 100vh; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+  header h1 { white-space: nowrap; }
+  h1 { font: 400 40px/1 'Instrument Serif', serif; letter-spacing: -0.01em; }
+  h1 em { color: var(--pri); }
+  h2 { font: 400 28px/1.1 'Instrument Serif', serif; margin-bottom: 12px; }
+  .who { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--dim); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
+  label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 14px 0 6px; }
+  input[type=text], input[type=url], input[type=password] { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 11px 13px; font: 15px Inter; }
+  input:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--pri); outline-offset: 2px; }
+  input.big { font-size: 19px; padding: 15px 16px; border-radius: 14px; }
+  .btn { border: 0; border-radius: 10px; padding: 12px 18px; font: 700 15px Inter; cursor: pointer; background: var(--pri); color: var(--pri-ink); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.ghost { background: none; color: var(--pri); border: 1px solid var(--line); padding: 8px 14px; font-size: 14px; }
+  .msg { margin-top: 12px; font-size: 14px; padding: 10px 12px; border-radius: 10px; background: var(--soft); }
+  .msg.bad { color: var(--red); } .msg.good { color: var(--ok); }
+  .msg:empty { display: none; }
+  .hint { font-size: 13px; color: var(--dim); margin-top: 6px; }
+  .check { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; font-size: 14px; }
+  .check input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--pri); }
+  details { margin-top: 14px; } summary { cursor: pointer; font-weight: 700; color: var(--pri); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+  /* login */
+  .login { max-width: 400px; margin: 9vh auto 0; }
+  .login h1 { text-align: center; margin-bottom: 18px; }
+  /* layout */
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+  /* runs */
+  .run { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-top: 10px; }
+  .run .top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .run .t { font-weight: 600; overflow-wrap: anywhere; }
+  .run .s { font-size: 13px; color: var(--dim); white-space: nowrap; }
+  .bar { height: 8px; border-radius: 4px; background: var(--soft); margin-top: 10px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--pri); border-radius: 4px; transition: width .6s ease; }
+  .tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--soft); }
+  .tag.ok { color: var(--ok); } .tag.bad { color: var(--red); } .tag.run { color: var(--warn); }
+  .run a { color: var(--pri); font-size: 13px; }
+  /* gallery */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; margin-top: 8px; }
+  @media (max-width: 520px) { .gallery { grid-template-columns: 1fr 1fr; gap: 10px; } .gallery .card { padding: 10px; } h1 { font-size: 32px; } .who .lbl { display: none; } }
+  .vid video { width: 100%; aspect-ratio: 9/16; border-radius: 12px; background: #000; display: block; }
+  .vid h3 { font: 600 14px/1.35 Inter; margin: 10px 0 4px; overflow-wrap: anywhere; }
+  .vid .meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--dim); }
+  .vid a { color: var(--pri); font-weight: 600; text-decoration: none; }
+  .empty { color: var(--dim); text-align: center; padding: 36px 10px; }
+  .section { margin-top: 26px; }
+  .spin { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp 0.8s linear infinite; display: inline-block; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } .bar i { transition: none; } }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <section id="loginView" class="login" hidden>
+    <h1>Video <em>Studio</em></h1>
+    <form class="card" id="loginForm" autocomplete="on">
+      <label for="u">Username</label>
+      <input type="text" id="u" name="username" autocomplete="username" required maxlength="64" />
+      <label for="p">Password</label>
+      <input type="password" id="p" name="password" autocomplete="current-password" required maxlength="200" />
+      <div class="row"><button class="btn" id="loginBtn" type="submit">Log in</button></div>
+      <div class="msg" id="loginMsg" role="alert"></div>
+    </form>
+  </section>
+
+  <!-- APP -->
+  <section id="appView" hidden>
+    <header>
+      <h1>Video <em>Studio</em></h1>
+      <div class="who"><span id="whoName"></span><button class="btn ghost" id="logoutBtn">Log out</button></div>
+    </header>
+
+    <div class="grid2">
+      <form class="card" id="makeForm">
+        <h2>New video</h2>
+        <label for="topic">What should the video explain?</label>
+        <input type="text" id="topic" class="big" maxlength="140" placeholder="e.g. Why Amazon became the biggest online store" required />
+        <details>
+          <summary>Options</summary>
+          <label for="notes">Notes for the AI (optional)</label>
+          <input type="text" id="notes" maxlength="300" placeholder="Audience, tone, facts to include" />
+          <label for="logo">Logo image link (optional)</label>
+          <input type="url" id="logo" placeholder="https://example.com/logo.png" />
+          <div class="check"><input type="checkbox" id="sitePhotos" /><label for="sitePhotos" style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink)">Use photos from the company's own website <span class="hint" style="display:block;margin:2px 0 0">Only if you have permission to use them.</span></label></div>
+        </details>
+        <div class="row"><button class="btn" id="makeBtn" type="submit">Make the video →</button></div>
+        <div class="msg" id="makeMsg" role="status"></div>
+        <div class="hint">The AI writes the script, then the voice, animation and rendering run on GitHub. A new video takes about 6–9 minutes and appears below when it's ready.</div>
+      </form>
+
+      <div class="card">
+        <h2>In progress &amp; recent</h2>
+        <div id="runs"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="row" style="justify-content:space-between;margin-top:0"><h2 style="margin:0">Your videos</h2><button class="btn ghost" id="refreshBtn">Refresh</button></div>
+      <div class="gallery" id="gallery"><div class="empty">Loading…</div></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+async function api(path, body) {
+  const r = await fetch("/api/" + path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  let data = {}; try { data = await r.json(); } catch {}
+  if (r.status === 401 && path !== "login") { showLogin(); throw new Error("Please log in."); }
+  if (!r.ok) throw new Error(data.error || "Error " + r.status);
+  return data;
+}
+function msg(el, text, kind) { el.className = "msg " + (kind || ""); el.textContent = text || ""; }
+function ago(iso) {
+  const s = Math.max(0, (Date.now() - new Date(iso)) / 1000);
+  if (s < 60) return "just now"; if (s < 3600) return Math.floor(s / 60) + " min ago";
+  if (s < 86400) return Math.floor(s / 3600) + " h ago"; return new Date(iso).toLocaleDateString();
+}
+
+// ---------- views ----------
+let pollTimer = null, lastRunning = 0;
+function showLogin() { clearTimeout(pollTimer); $("appView").hidden = true; $("loginView").hidden = false; $("u").focus(); }
+function showApp(user) { $("loginView").hidden = true; $("appView").hidden = false; $("whoName").innerHTML = '<span class="lbl">Logged in as </span>' + esc(user); loadRuns(); loadVideos(); }
+
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault(); $("loginBtn").disabled = true; msg($("loginMsg"), "");
+  try { const d = await api("login", { username: $("u").value.trim(), password: $("p").value }); $("p").value = ""; showApp(d.user); }
+  catch (err) { msg($("loginMsg"), err.message, "bad"); }
+  $("loginBtn").disabled = false;
+});
+$("logoutBtn").addEventListener("click", async () => { try { await api("logout", {}); } catch {} showLogin(); });
+
+// ---------- make a video ----------
+$("makeForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const topic = $("topic").value.trim();
+  if (topic.length < 4) { msg($("makeMsg"), "Type a topic first.", "bad"); return; }
+  $("makeBtn").disabled = true; msg($("makeMsg"), "Starting…");
+  try {
+    await api("make", { topic, notes: $("notes").value.trim(), logo: $("logo").value.trim(), site_photos: $("sitePhotos").checked });
+    msg($("makeMsg"), "Started! Follow the progress on the right.", "good");
+    $("topic").value = ""; setTimeout(loadRuns, 2500);
+  } catch (err) { msg($("makeMsg"), err.message, "bad"); }
+  $("makeBtn").disabled = false;
+});
+
+// ---------- progress ----------
+async function loadRuns() {
+  clearTimeout(pollTimer);
+  let running = 0;
+  try {
+    const { runs } = await api("runs");
+    running = runs.filter((r) => r.status !== "completed").length;
+    $("runs").innerHTML = runs.length ? runs.slice(0, 8).map((r) => {
+      const done = r.status === "completed", ok = r.conclusion === "success";
+      const tag = done ? (ok ? '<span class="tag ok">Done</span>' : `<span class="tag bad">${esc(r.conclusion || "Failed")}</span>`)
+                       : '<span class="tag run">Running</span>';
+      return `<div class="run"><div class="top"><span class="t">${esc(r.title)}</span>${tag}</div>
+        ${done ? "" : `<div class="bar"><i style="width:${Math.max(4, r.progress || 0)}%"></i></div>
+        <div class="row" style="margin-top:8px;font-size:13px;color:var(--dim)"><span class="spin"></span>${esc(r.step || "Starting…")}</div>`}
+        <div class="row" style="margin-top:6px;justify-content:space-between"><span class="s">${ago(r.created)}</span>
+        <a href="${esc(r.url)}" target="_blank" rel="noopener">${done && !ok ? "See what went wrong" : "Details"}</a></div></div>`;
+    }).join("") : '<div class="empty">No videos yet. Type a topic to make your first one.</div>';
+  } catch (err) { if (err.message !== "Please log in.") $("runs").innerHTML = `<div class="empty">${esc(err.message)}</div>`; else return; }
+  if (lastRunning > running) loadVideos();   // something just finished
+  lastRunning = running;
+  pollTimer = setTimeout(loadRuns, running ? 8000 : 30000);
+}
+
+// ---------- gallery ----------
+async function loadVideos() {
+  try {
+    const { videos } = await api("videos");
+    $("gallery").innerHTML = videos.length ? videos.map((v) => `<div class="card vid">
+        <video controls preload="metadata" playsinline src="${esc(v.url)}#t=2"></video>
+        <h3>${esc(v.title)}</h3>
+        <div class="meta"><span>${ago(v.date)}</span><a href="${esc(v.url)}" download>Download</a></div>
+        ${v.credits.length ? `<details><summary style="font-size:13px">Image credits</summary><div class="hint">${v.credits.map(esc).join("<br/>")}</div></details>` : ""}
+      </div>`).join("") : '<div class="empty">No finished videos yet.</div>';
+  } catch (err) { if (err.message !== "Please log in.") $("gallery").innerHTML = `<div class="empty">${esc(err.message)}</div>`; }
+}
+$("refreshBtn").addEventListener("click", () => { loadRuns(); loadVideos(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("appView").hidden) loadRuns(); });
+
+// ---------- start ----------
+api("me").then((d) => d.user ? showApp(d.user) : showLogin()).catch(showLogin);
+</script>
+</body>
+</html>

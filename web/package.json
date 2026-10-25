@@ -1,0 +1,6 @@
+{
+  "name": "video-studio-web",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": { "dev": "node dev-server.js" }
+}

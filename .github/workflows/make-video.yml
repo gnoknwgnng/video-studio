@@ -1,4 +1,5 @@
 name: Make video
+run-name: ${{ github.event.inputs.topic || github.event.inputs.video || github.event.head_commit.message || 'Make video' }}
 
 # Runs when you push a change inside videos/<name>/ (e.g. edit video.json),
 # or manually from the Actions tab -> "Make video" -> "Run workflow".
@@ -29,6 +30,10 @@ on:
         default: false
       video:
         description: "OR rebuild an existing folder inside videos/ (leave topic empty), e.g. docsdocs"
+        required: false
+        default: ""
+      requested_by:
+        description: "Filled in by the website (who asked for this video)"
         required: false
         default: ""
 
