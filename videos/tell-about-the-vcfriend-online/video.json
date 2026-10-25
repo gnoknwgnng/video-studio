@@ -1,0 +1,147 @@
+{
+  "company": "VC Friend",
+  "url": "",
+  "colors": {
+    "primary": "#2A3F5F",
+    "accent": "#5A7FAF",
+    "alert": "#D64545",
+    "ink": "#0A0A0A",
+    "background": "#F5F8FA"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "images": {
+    "logo_domain": "vcfriend.online",
+    "site_photos": true
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Networking with VCs is",
+      "title_em": "entrepreneurs' biggest hurdle.",
+      "alert_word": "hurdle.",
+      "icon": "building",
+      "meter_label": "Frustration level",
+      "cards": [
+        {
+          "text": "Finding investors",
+          "cue": "finding"
+        },
+        {
+          "text": "Getting warm intros",
+          "cue": "getting"
+        },
+        {
+          "text": "Scheduling meetings",
+          "cue": "scheduling"
+        },
+        {
+          "text": "Building credibility",
+          "cue": "building"
+        }
+      ],
+      "lines": [
+        {
+          "say": "For founders, networking with VCs is entrepreneurs' biggest hurdle. Finding investors is time‑consuming. Getting warm intros is rare. Scheduling meetings takes endless emails. Building credibility feels impossible.",
+          "seed": 42
+        }
+      ],
+      "image_query": "founder frustrated laptop coffee"
+    },
+    {
+      "type": "intro",
+      "logo_cue": "connects",
+      "tagline": "Personalized VC introductions,",
+      "tagline_em": "made easy.",
+      "tagline_cue": "personalized",
+      "image_queries": [
+        "startup pitch deck meeting",
+        "venture capitalists handshake"
+      ],
+      "tags": [
+        {
+          "text": "Early-stage founders",
+          "cue": "founders"
+        },
+        {
+          "text": "Accelerator cohorts",
+          "cue": "accelerator"
+        },
+        {
+          "text": "Corporate innovators",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "That's where VC Friend connects. Personalized VC introductions, made easy for early-stage founders, accelerator cohorts, and corporate innovators.",
+          "seed": 43
+        }
+      ],
+      "image_query": "startup intro handshake",
+      "photos": []
+    },
+    {
+      "type": "steps",
+      "title": "How it works",
+      "steps": [
+        {
+          "title": "Create profile",
+          "chips": [
+            "Startup snapshot",
+            "Funding goals"
+          ],
+          "cue": "create"
+        },
+        {
+          "title": "Match with investors",
+          "chips": [
+            "Algorithmic fit",
+            "Warm intro"
+          ],
+          "cue": "match"
+        },
+        {
+          "title": "Book & pitch",
+          "chips": [
+            "Calendar sync",
+            "Pitch deck upload"
+          ],
+          "cue": "book"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Create a profile with your startup snapshot and funding goals.",
+          "seed": 44
+        },
+        {
+          "say": "Match with investors using algorithmic fit and get a warm intro.",
+          "seed": 45
+        },
+        {
+          "say": "Book a meeting, sync calendars, and upload your pitch deck to pitch.",
+          "seed": 46
+        }
+      ],
+      "image_query": "startup profile dashboard"
+    },
+    {
+      "type": "end",
+      "tagline": "Your bridge",
+      "tagline_em": "to capital",
+      "logo_cue": "Friend",
+      "tagline_cue": "Your",
+      "lines": [
+        {
+          "say": "Your bridge to capital, VC Friend.",
+          "seed": 47
+        }
+      ],
+      "image_query": "founder shaking hands investor"
+    }
+  ]
+}
