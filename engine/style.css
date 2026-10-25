@@ -116,3 +116,17 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--
 .sc-end .ch { top: 270px; font-size: 24px; color: var(--dim); }
 .sc-end .tg { top: 1110px; height: 200px; font-size: 92px; }
 .sc-end .url { top: 1360px; font-family: 'Inter'; font-weight: 800; font-size: 44px; color: var(--primary); }
+
+/* real photo behind a scene: faded into the background so text stays readable */
+.bgphoto { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+.bgphoto img { width: 100%; height: 100%; object-fit: cover; opacity: 0.22; filter: saturate(0.85); }
+.bgphoto::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, var(--bg) 0%, transparent 28%, transparent 62%, var(--bg) 100%); }
+.sc-end .bgphoto img { opacity: 0.30; }
+/* icon-style logo (website icon / Simple Icons) shown next to the company name */
+.lockup { display: inline-flex; align-items: center; gap: 0.35em; height: 100%; max-width: 100%; }
+.lockup .ico { height: 0.95em; width: auto; flex: none; border-radius: 0.14em; }
+.biglogo .lockup { font-size: 150px; }
+.biglogo .lockup .wm { font-size: 1em; }
+#brand .lockup { font-size: 44px; }
+#brand .lockup .wm { font-size: 1em; }
+#brand .lockup .ico { height: 1em; }

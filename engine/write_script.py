@@ -22,8 +22,14 @@ Return ONLY one JSON object, no markdown, matching this format exactly.
   "company": "<short name of the subject, 1-3 words; shown as a big wordmark>",
   "url": "<website if the topic is a real product/company and you are sure of it, else empty string>",
   "colors": {"primary": "#hex", "accent": "#hex", "alert": "#hex", "ink": "#hex", "background": "#hex"},
+  "images": {"logo_domain": "<the company's website domain, e.g. amazon.com, or empty for a general topic>"},
   "scenes": [ ...6 to 8 scenes, see types below... ]
 }
+
+REAL PHOTOS: add to the "problem", "steps", "question" and "end" scenes an "image_query" (3-6 plain English words
+describing a real photo that fits that scene, e.g. "stressed shopper laptop parcels", "solar panels rooftop india"),
+and to the "intro" scene "image_queries": [2 different photo searches]. Describe concrete, photographable things;
+no text, logos or abstract ideas.
 
 Colours: primary = strong brand colour (dark enough for white text on it); accent = lighter tint of a related hue;
 alert = a red/orange for problems; ink = near-black text colour; background = very light tint (near white).
@@ -245,12 +251,18 @@ def tidy(cfg):
             last = s["title_em"].split()[-1]
             if s.get("alert_word") not in s["title_em"].split(): s["alert_word"] = last
         if s["type"] == "intro": s.setdefault("photos", [])
+        # make sure real-photo searches exist even if the model forgot them
+        if s["type"] == "intro" and not s.get("image_queries"):
+            s["image_queries"] = [cfg.get("company", ""), cfg.get("company", "") + " people"]
+        if s["type"] in ("problem", "end") and not s.get("image_query"):
+            s["image_query"] = cfg.get("company", "")
     cfg["voice"] = {"exaggeration": 0.6, "cfg_weight": 0.45}
     hexok = lambda v: isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v)
     defaults = {"primary": "#024c87", "accent": "#85bbe0", "alert": "#d64545", "ink": "#0d2440", "background": "#f3f6fb"}
     col = cfg.get("colors") if isinstance(cfg.get("colors"), dict) else {}
     cfg["colors"] = {k: (col.get(k) if hexok(col.get(k)) else v) for k, v in defaults.items()}
-    order = ["company", "url", "logo", "colors", "voice", "scenes"]
+    if not isinstance(cfg.get("images"), dict): cfg["images"] = {}
+    order = ["company", "url", "logo", "colors", "voice", "images", "scenes"]
     return {k: cfg[k] for k in order if k in cfg}
 
 
@@ -309,12 +321,14 @@ def main():
     ap.add_argument("--notes", default="", help="extra guidance: audience, tone, facts to include")
     ap.add_argument("--model", default=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"))
     ap.add_argument("--logo", default="", help="optional logo image URL")
+    ap.add_argument("--site-photos", action="store_true", help="use photos from the company's own website (needs permission)")
     a = ap.parse_args()
     folder = slugify(a.folder or a.topic)
     vdir = os.path.join(REPO, "videos", folder)
     print(f"[script] writing '{a.topic}' with {a.model} -> videos/{folder}/video.json", flush=True)
     cfg = write_script(a.topic, a.notes, a.model)
     if a.logo: cfg["logo"] = a.logo
+    if a.site_photos: cfg.setdefault("images", {})["site_photos"] = True
     os.makedirs(vdir, exist_ok=True)
     json.dump(cfg, open(os.path.join(vdir, "video.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
     n = sum(len(l["say"].split()) for s in cfg["scenes"] for l in s["lines"])

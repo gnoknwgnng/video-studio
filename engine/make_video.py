@@ -15,6 +15,7 @@ REPO = os.path.dirname(ENGINE)
 sys.path.insert(0, ENGINE)
 import scenes as SC  # noqa: E402
 import sfx as FX     # noqa: E402
+import media as MEDIA  # noqa: E402
 
 norm = lambda s: re.sub(r"[^a-z0-9]", "", str(s).lower())
 LEAD, TAIL, GAP_IN, GAP_SCENE, GAP_FIRST = 0.35, 2.2, 0.32, 0.7, 1.0
@@ -253,6 +254,7 @@ def main():
 
     vdir = os.path.abspath(a.video_dir)
     cfg = json.load(open(os.path.join(vdir, "video.json"), encoding="utf-8"))
+    cfg["url"] = re.sub(r"^(https?://)?(www\.)?", "", str(cfg.get("url", ""))).rstrip("/")   # show "amazon.com"
     name = os.path.basename(vdir.rstrip("/"))
     scenes = cfg["scenes"]
     for s in scenes:
@@ -286,9 +288,14 @@ def main():
         log("downloaded", ref)
         return fn
 
+    credits = MEDIA.enrich(cfg, os.path.join(build, "media"))   # free real photos + logo (no keys)
+    os.makedirs(os.path.join(vdir, "out"), exist_ok=True)
+    open(os.path.join(vdir, "out", "credits.md"), "w", encoding="utf-8").write(
+        ("Image credits:\n" + "\n".join(credits) + "\n") if credits else "")
     cfg["logo"] = media(cfg.get("logo"))
     for s in scenes:
         if s.get("photos"): s["photos"] = [media(p) for p in s["photos"]]
+        if s.get("photo"): s["photo"] = media(s["photo"])
 
     # 1-2. voice + assembly
     paths = make_voice(vdir, lines, cfg.get("voice", {}), a.skip_voice)
@@ -306,7 +313,12 @@ def main():
     company = cfg.get("company", name)
 
     def logo_html(cls, style=""):
-        inner = f'<img src="media/{SC.E(logo_file)}" alt="{SC.E(company)}" />' if logo_file else f'<span class="wm fit" data-box="parent">{SC.E(company)}</span>'
+        if logo_file and cfg.get("logo_kind") == "icon":
+            inner = f'<span class="lockup fit" data-box="parent"><img class="ico" src="media/{SC.E(logo_file)}" alt="" /><span class="wm">{SC.E(company)}</span></span>'
+        elif logo_file:
+            inner = f'<img src="media/{SC.E(logo_file)}" alt="{SC.E(company)}" />'
+        else:
+            inner = f'<span class="wm fit" data-box="parent">{SC.E(company)}</span>'
         return f'<div class="{cls}" style="{style}">{inner}</div>'
 
     warns, events, body, js_all = [], [], [], []
@@ -315,6 +327,10 @@ def main():
         c = SceneContext(i, len(scenes), B[i], B[i + 1], lidx, marks, words, cfg.get("url", ""), logo_html, warns, events)
         if i > 0: c.sfx("whoosh", B[i] - 0.1, 0.55)
         h, j = SC.BUILDERS[s["type"]](s, c)
+        if s.get("photo"):
+            h = f'<div class="bgphoto"><img src="media/{SC.E(s["photo"])}" alt="" /></div>' + h
+            j += f'\n      tl.fromTo("#s{i} .bgphoto img", {{ scale: 1.18 }}, {{ scale: 1.02, duration: {round(B[i + 1] - B[i], 3)}, ease: "none" }}, {B[i]});\n'
+            j += f'      tl.fromTo("#s{i} .bgphoto", {{ opacity: 0 }}, {{ opacity: 1, duration: 0.6 }}, {B[i]});\n'
         body.append(f'<div id="s{i}" class="clip sc-{s["type"]}" data-start="{B[i]}" data-duration="{round(B[i + 1] - B[i], 3)}" data-track-index="1"><div class="inner">{h}</div></div>')
         js_all.append(f"      // scene {i + 1}: {s['type']}\n      " + j)
         if s["type"] in SC.HIDE_BRAND:
@@ -401,7 +417,7 @@ def main():
         gs = os.environ.get("GITHUB_STEP_SUMMARY")
         if gs: open(gs, "a").write("\n> ⚠️ The layout/contrast check reported issues; the video was rendered anyway. Watch it before sharing.\n")
     out = os.path.join(vdir, "out", f"{name}.mp4")
-    subprocess.run(["npx", "hyperframes", "render", "-o", out], cwd=build, check=True)
+    subprocess.run(["npx", "hyperframes", "render", "-o", out, "--fps", os.environ.get("RENDER_FPS", "24")], cwd=build, check=True)
     log("done ->", os.path.relpath(out, REPO))
 
 

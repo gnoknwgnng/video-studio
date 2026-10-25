@@ -22,6 +22,11 @@ on:
         description: "Optional logo image URL (https://...)"
         required: false
         default: ""
+      site_photos:
+        description: "Use photos from the company's own website (only if you have permission)"
+        type: boolean
+        required: false
+        default: false
       video:
         description: "OR rebuild an existing folder inside videos/ (leave topic empty), e.g. docsdocs"
         required: false
@@ -94,8 +99,22 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install FFmpeg
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Restore FFmpeg
+        id: ffmpeg
+        uses: actions/cache@v4
+        with:
+          path: ~/ffmpeg-bin
+          key: ffmpeg-static-${{ runner.os }}-v1
+
+      - name: Install FFmpeg (first run only)
+        if: steps.ffmpeg.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/ffmpeg-bin
+          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz | tar -xJ -C /tmp
+          cp /tmp/ffmpeg-*-amd64-static/ffmpeg /tmp/ffmpeg-*-amd64-static/ffprobe ~/ffmpeg-bin/
+
+      - name: Use FFmpeg
+        run: echo "$HOME/ffmpeg-bin" >> "$GITHUB_PATH"
 
       - name: Cache AI models (Chatterbox voice)
         uses: actions/cache@v4
@@ -152,7 +171,7 @@ jobs:
           if [ -z "$GROQ_API_KEY" ]; then
             echo "::error::Add your Groq key as a repository secret named GROQ_API_KEY (Settings -> Secrets and variables -> Actions)"; exit 1
           fi
-          python engine/write_script.py "$TOPIC" --folder "${{ matrix.video }}" --notes "$NOTES" --logo "$LOGO"
+          python engine/write_script.py "$TOPIC" --folder "${{ matrix.video }}" --notes "$NOTES" --logo "$LOGO" ${{ github.event.inputs.site_photos == 'true' && '--site-photos' || '' }}
           echo "### Script written by AI" >> "$GITHUB_STEP_SUMMARY"
           python -c "import json;c=json.load(open('videos/${{ matrix.video }}/video.json'));print('\n'.join('- **'+s['type']+'**: '+' '.join(l.get('sub') or l['say'] for l in s['lines']) for s in c['scenes']))" >> "$GITHUB_STEP_SUMMARY"
 
@@ -182,7 +201,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${{ matrix.video }}-v${{ github.run_number }}"
+          echo "Made from \`videos/${{ matrix.video }}/video.json\` at ${{ github.sha }}." > notes.md
+          if [ -s "videos/${{ matrix.video }}/out/credits.md" ]; then echo "" >> notes.md; cat "videos/${{ matrix.video }}/out/credits.md" >> notes.md; fi
           company=$(python -c "import json;print(json.load(open('videos/${{ matrix.video }}/video.json')).get('company','${{ matrix.video }}'))")
           gh release create "$tag" "videos/${{ matrix.video }}/out/${{ matrix.video }}.mp4" \
             --title "$company explainer (run ${{ github.run_number }})" \
-            --notes "Made from \`videos/${{ matrix.video }}/video.json\` at ${{ github.sha }}."
+            --notes-file notes.md
