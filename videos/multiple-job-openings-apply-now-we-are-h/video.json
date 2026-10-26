@@ -1,82 +1,82 @@
 {
-  "company": "Job Openings",
-  "url": "",
+  "company": "Alvineient",
+  "url": "https://docs.google.com/forms/d/e/1FAIpQLSeppxtku3IVBDqFc57LmuXra4z4GtTYj30kNUtc4Go2tWZbvw/viewform",
   "colors": {
-    "primary": "#0066CC",
-    "accent": "#99CCFF",
-    "alert": "#D64545",
-    "ink": "#0D0D0D",
-    "background": "#F5F9FF"
+    "primary": "#003366",
+    "accent": "#66a3ff",
+    "alert": "#d64545",
+    "ink": "#0d0d0d",
+    "background": "#f5f9ff"
   },
   "voice": {
     "exaggeration": 0.6,
     "cfg_weight": 0.45
   },
   "images": {
-    "logo_domain": ""
+    "logo_domain": "alvineient.com"
   },
   "scenes": [
     {
       "type": "problem",
-      "kicker": "The problem",
-      "title": "Finding the right role",
-      "title_em": "is getting harder.",
-      "alert_word": "harder.",
+      "kicker": "Career Alert",
+      "title": "We're expanding our team",
+      "title_em": "across India.",
+      "alert_word": "India.",
       "icon": "building",
-      "meter_label": "Frustration level",
+      "meter_label": "Open roles",
       "cards": [
         {
-          "text": "Limited listings",
-          "cue": "listings"
+          "text": "Academic Counselor",
+          "cue": "counselor"
         },
         {
-          "text": "Slow response",
-          "cue": "response"
+          "text": "Customer Support Executive",
+          "cue": "support"
         },
         {
-          "text": "Unclear requirements",
-          "cue": "requirements"
+          "text": "HR Freelance Recruiter",
+          "cue": "recruiter"
         },
         {
-          "text": "Remote confusion",
-          "cue": "remote"
+          "text": "Human Resource Team Lead",
+          "cue": "lead"
         }
       ],
-      "image_query": "frustrated job seeker laptop coffee",
+      "image_query": "diverse job fair crowd",
       "lines": [
         {
-          "say": "Job seekers, finding the right role is getting harder. Limited listings. Slow response. Unclear requirements. Remote confusion.",
+          "say": "Career Alert: We're expanding our team across India. Academic Counselor. Customer Support Executive. HR Freelance Recruiter. Human Resource Team Lead.",
           "seed": 42
         }
       ]
     },
     {
       "type": "intro",
-      "logo_cue": "comes",
-      "tagline": "Your next career move,",
-      "tagline_em": "starts here.",
-      "tagline_cue": "career",
+      "logo_cue": "is",
+      "tagline": "Premium client services",
+      "tagline_em": "hiring",
+      "tagline_cue": "top",
       "image_queries": [
-        "office interview handshake",
-        "remote worker home office"
+        "modern office building",
+        "team video conference"
       ],
       "tags": [
         {
-          "text": "Recent grads",
-          "cue": "recent"
+          "text": "Onsite & Remote",
+          "cue": "onsite"
         },
         {
-          "text": "Career changers",
-          "cue": "career"
+          "text": "Freshers & Experienced",
+          "cue": "freshers"
         },
         {
-          "text": "Experienced pros",
+          "text": "Apply Anywhere",
           "highlight": true
         }
       ],
       "lines": [
         {
-          "say": "That's where Job Openings comes in. Your next career move, starts here today for recent grads, career changers, and experienced pros.",
+          "say": "Alvineient is hiring top talent, offering onsite and remote roles for freshers and experienced, so you can apply from anywhere across India.",
           "seed": 43
         }
       ],
@@ -84,119 +84,115 @@
     },
     {
       "type": "steps",
-      "title": "How to apply",
+      "title": "Open positions",
       "steps": [
         {
-          "title": "Search roles",
+          "title": "Onsite roles",
           "chips": [
-            "Keywords",
-            "Location",
-            "Filters"
+            "CTC 6‑11 LPA",
+            "Gurgaon"
           ],
-          "cue": "search"
+          "cue": "onsite"
         },
         {
-          "title": "Submit application",
+          "title": "Freelance recruiter",
           "chips": [
-            "Resume",
-            "Cover letter",
-            "Portfolio"
+            "Performance pay",
+            "Work from home"
           ],
-          "cue": "submit"
+          "cue": "freelance"
         },
         {
-          "title": "Interview & hire",
+          "title": "Team lead",
           "chips": [
-            "Video call",
-            "Onsite",
-            "Offer"
+            "CTC 1.8‑2.4 LPA",
+            "Remote"
           ],
-          "cue": "interview"
+          "cue": "lead"
         }
       ],
-      "image_query": "candidate reviewing job listings tablet",
       "lines": [
         {
-          "say": "Search roles using keywords, location and filters.",
+          "say": "Onsite roles offer CTC six to eleven lakh per annum in Gurgaon.",
           "seed": 44
         },
         {
-          "say": "Submit your application quickly with a resume, cover letter and portfolio.",
+          "say": "Freelance recruiter works from home with performance‑based payout and leads.",
           "seed": 45
         },
         {
-          "say": "Interview via video call or onsite and receive your offer.",
+          "say": "Team lead earns CTC one point eight to two point four lakh remotely.",
           "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Other jobs",
+      "right_label": "Alvineient",
+      "rows": [
+        {
+          "left": "Limited to office locations",
+          "right": "Onsite and remote options",
+          "left_cue": "limit",
+          "right_cue": "offers"
+        },
+        {
+          "left": "Fixed salaries only",
+          "right": "Uncapped incentives & performance pay",
+          "left_cue": "fixed",
+          "right_cue": "provides"
+        },
+        {
+          "left": "Slow hiring process",
+          "right": "Virtual fast‑track interviews",
+          "left_cue": "slow",
+          "right_cue": "enables"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Other jobs limit you to office locations. Alvineient offers onsite and remote options.",
+          "seed": 47
+        },
+        {
+          "say": "Typical roles have fixed salaries. Alvineient provides uncapped incentives and performance pay.",
+          "seed": 48
+        },
+        {
+          "say": "Hiring processes can be slow. Alvineient enables virtual fast‑track interviews.",
+          "seed": 49
         }
       ]
     },
     {
       "type": "question",
       "pre": "So what makes",
-      "em": "Job Openings",
+      "em": "Alvineient",
       "post": "different?",
-      "em_cue": "job",
+      "em_cue": "Alvineient",
       "mark_cue": "different",
-      "image_query": "diverse team meeting office",
+      "image_query": "candidate reviewing job posting on laptop",
       "lines": [
         {
-          "say": "So what makes Job Openings different?",
-          "seed": 47
-        }
-      ]
-    },
-    {
-      "type": "compare",
-      "left_label": "Traditional job boards",
-      "right_label": "Job Openings",
-      "rows": [
-        {
-          "left": "Generic listings",
-          "right": "Curated premium roles",
-          "left_cue": "generic",
-          "right_cue": "curates"
-        },
-        {
-          "left": "Slow hiring",
-          "right": "Fast response",
-          "left_cue": "slow",
-          "right_cue": "fast"
-        },
-        {
-          "left": "Limited remote",
-          "right": "Onsite and remote",
-          "left_cue": "limit",
-          "right_cue": "onsite"
-        }
-      ],
-      "lines": [
-        {
-          "say": "Traditional job boards show generic listings. Job Openings curates premium roles.",
-          "seed": 48
-        },
-        {
-          "say": "Boards often have slow hiring. Job Openings offers fast response.",
-          "seed": 49
-        },
-        {
-          "say": "Many limit remote options. Job Openings provides onsite and remote roles.",
+          "say": "So what makes Alvineient different?",
           "seed": 50
         }
       ]
     },
     {
       "type": "end",
-      "tagline": "Find your future",
-      "tagline_em": "today.",
-      "logo_cue": "openings",
-      "tagline_cue": "find",
-      "image_query": "happy employee receiving offer",
+      "tagline": "Join the future",
+      "tagline_em": "Now",
+      "logo_cue": "Alvineient",
+      "tagline_cue": "join",
       "lines": [
         {
-          "say": "Find your future today. Job Openings.",
+          "say": "Join the future now at Alvineient. Apply today through our form.",
           "seed": 51
         }
-      ]
+      ],
+      "image_query": "Alvineient"
     }
   ]
 }
