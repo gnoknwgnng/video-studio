@@ -12,7 +12,7 @@ import argparse, json, os, re, sys, time, urllib.error, urllib.request
 ENGINE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(ENGINE)
 API = "https://api.groq.com/openai/v1/chat/completions"
-TYPES = ["problem", "stats", "intro", "steps", "flip", "question", "compare", "end"]
+TYPES = ["problem", "stats", "intro", "steps", "flip", "question", "compare", "end", "website"]
 ICONS = ["tooth", "document", "heart", "shield", "building", "box", "chip"]
 
 SYSTEM = """You write scripts for 45-70 second vertical explainer videos (1080x1920) with an AI voiceover.
@@ -64,6 +64,11 @@ Scene types (use each at most once; order should tell a story):
    "lines":[2-3 lines contrasting each row in order]}
 8. "end" (ALWAYS LAST): {"type":"end","tagline":"<2-4 words>","tagline_em":"<2-4 words>","logo_cue":"<word: the name as spoken, last word of the line>",
    "tagline_cue":"<first word of the line>","lines":[1 short line: tagline then the name]}
+9. "website" (ONLY when the topic is about ONE specific company, product, app or website that has a real website;
+   NEVER for general topics, comparisons, people, places, history, science or fictional characters like "Iron Man vs Superman"):
+   {"type":"website","url":"<its real domain, e.g. vcfriend.online>","kicker":"See it live","title":"<3-6 words about what the site offers>",
+    "lines":[1-2 lines describing what you can do on the site, as if scrolling through it]}
+   Put it right after the "intro" scene. It shows the real website scrolling inside a phone.
 
 RULES
 - If the topic is a general subject or idea (not one named product or company), the "company" is that subject in
@@ -266,12 +271,51 @@ def tidy(cfg):
     return {k: cfg[k] for k in order if k in cfg}
 
 
+TLDS = ("com|in|online|io|ai|co|org|net|app|dev|xyz|me|tech|store|shop|site|so|gg|tv|us|uk|info|biz|cloud|studio|digital|"
+        "live|world|space|website|page|link|club|design|agency|health|finance|money|edu|gov|ac")
+DOMAIN_RE = re.compile(r"\b((?:[a-z0-9-]+\.)+(?:" + TLDS + r"))\b(?![a-z0-9-])", re.I)
+
+
+def topic_domain(topic):
+    """The website named in the topic, e.g. 'Tell me about vcfriend.online' -> 'vcfriend.online' (else '')."""
+    m = DOMAIN_RE.search(re.sub(r"https?://", "", topic or ""))
+    return re.sub(r"^www\.", "", m.group(1).lower()) if m else ""
+
+
+def apply_website_rule(cfg, dom):
+    """Website scroll only for specific companies/products: forced when the topic names a site, removed for general topics."""
+    sc, imgs = cfg["scenes"], cfg.setdefault("images", {})
+    if dom:
+        imgs["logo_domain"] = dom
+        if not cfg.get("url"): cfg["url"] = dom
+    site = dom or imgs.get("logo_domain") or ""
+    web = [x for x in sc if x.get("type") == "website"]
+    if not site:                                    # general topic: never show a website
+        cfg["scenes"] = [x for x in sc if x.get("type") != "website"]; return cfg
+    for x in web[1:]: sc.remove(x)                  # at most one
+    if web:
+        web[0]["url"] = dom or web[0].get("url") or site
+    elif dom:                                       # the topic names a site but the AI forgot the scene
+        name = cfg.get("company", dom)
+        at = next((i + 1 for i, x in enumerate(sc) if x.get("type") == "intro"), 1)
+        sc.insert(at, {"type": "website", "url": dom, "kicker": "See it live", "title": f"Inside {name}",
+                       "lines": [{"say": f"Here's {name}, live, right on your phone.", "seed": 41}]})
+    return cfg
+
+
 def write_script(topic, notes="", model="openai/gpt-oss-120b", key=None, tries=3):
+    return apply_website_rule(_write_script(topic, notes, model, key, tries), topic_domain(topic))
+
+
+def _write_script(topic, notes="", model="openai/gpt-oss-120b", key=None, tries=3):
     key = key or os.environ.get("GROQ_API_KEY")
     if not key: sys.exit("Set the GROQ_API_KEY environment variable (a GitHub secret in Actions).")
     ex = example()
     sysmsg = SYSTEM + (f"\nEXAMPLE of a finished, high-quality script (different topic; match its quality and style, not its content):\n{ex}\n" if ex else "")
-    user = f"Topic: {topic}\n" + (f"Extra notes from the creator: {notes}\n" if notes else "") + "Write the video JSON now."
+    dom = topic_domain(topic)
+    user = f"Topic: {topic}\n" + (f"Extra notes from the creator: {notes}\n" if notes else "") + (
+        f'This topic names the website {dom}: it is a specific company/product. Include a "website" scene with "url":"{dom}" '
+        f'right after the "intro" scene, and set images.logo_domain to "{dom}".\n' if dom else "") + "Write the video JSON now."
     msgs = [{"role": "system", "content": sysmsg}, {"role": "user", "content": user}]
     last_errs = []
     for attempt in range(1, tries + 1):

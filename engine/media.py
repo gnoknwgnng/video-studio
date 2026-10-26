@@ -141,10 +141,10 @@ _site_cache = {}
 def site_assets(domain):
     """Read the homepage once: returns {"base", "logos": [urls], "photos": [urls]} (best first)."""
     domain = re.sub(r"^https?://", "", domain or "").split("/")[0].lower()
-    if not domain or "." not in domain: return {"base": "", "logos": [], "photos": []}
+    if not domain or "." not in domain: return {"base": "", "logos": [], "photos": [], "share": []}
     if domain in _site_cache: return _site_cache[domain]
     base = "https://" + domain
-    res = {"base": base, "logos": [], "photos": []}
+    res = {"base": base, "logos": [], "photos": [], "share": []}
     try:
         req = urllib.request.Request(base, headers={"User-Agent": BROWSER_UA, "Accept": "text/html"})
         with urllib.request.urlopen(req, timeout=20) as r:
@@ -170,7 +170,7 @@ def site_assets(domain):
     for prop in ("og:image", "twitter:image"):
         m = re.search(r'<meta[^>]+(?:property|name)=["\']' + prop + r'["\'][^>]+content=["\']([^"\']+)', html, re.I) or \
             re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\']' + prop, html, re.I)
-        if m and absu(m.group(1)): res["photos"].append(absu(m.group(1)))
+        if m and absu(m.group(1)): res["photos"].append(absu(m.group(1))); res["share"].append(absu(m.group(1)))
     for tag in imgs:
         srcset = attr(tag, "srcset")
         src = srcset.split(",")[-1].strip().split(" ")[0] if srcset else attr(tag, "src")
@@ -183,6 +183,23 @@ def site_assets(domain):
     log(f"{domain}: {len(res['logos'])} logo candidate(s), {len(res['photos'])} photo candidate(s)")
     _site_cache[domain] = res
     return res
+
+
+def share_card(domain, out_dir):
+    """The site's own share image (og:image / twitter:image) - used when the full page can't be captured.
+    Returns (file, width, height) or None."""
+    for u in dict.fromkeys(site_assets(domain)["share"]):
+        try:
+            data, ctype = _get(u, timeout=15)
+            saved = _save_image(data, ctype, out_dir, "site_card", max_side=1600)
+            if not saved or saved.endswith(".svg"): continue
+            from PIL import Image
+            w, h = Image.open(os.path.join(out_dir, saved)).size
+            if w < 400: continue
+            return saved, w, h
+        except Exception:
+            continue
+    return None
 
 
 def _too_light(data, ctype):

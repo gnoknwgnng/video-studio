@@ -245,6 +245,42 @@ def split_sub(text, st, en):
 
 
 # ---------------------------------------------------------------- main
+def capture_website(url, media_dir):
+    """Phone-size full-page screenshot of `url` (engine/capture_site.cjs).
+    Returns {"mode": "scroll", "shot", "shot_px"}, or {"mode": "card", ...} with the site's own
+    share image when the page can't be captured, or {"mode": "logo"} (logo + address) as the last resort."""
+    if not url: return None
+    url = url if url.startswith("http") else "https://" + url
+    png = os.path.join(media_dir, "site_full.png")
+    if os.environ.get("SITE_FALLBACK_TEST") in ("card", "logo"):   # local testing of the fallbacks
+        info = {"ok": False, "error": "forced by SITE_FALLBACK_TEST"}
+        if os.environ["SITE_FALLBACK_TEST"] == "logo": return {"mode": "logo"}
+    else:
+        info = None
+    try:
+        if info: raise RuntimeError(info["error"])
+        r = subprocess.run(["node", os.path.join(ENGINE, "capture_site.cjs"), url, png], capture_output=True, text=True, timeout=120, cwd=REPO)
+        info = json.loads((r.stdout.strip().splitlines() or ["{}"])[-1])
+    except Exception as e:
+        info = {"ok": False, "error": str(e)}
+    if info.get("ok"):
+        from PIL import Image
+        im = Image.open(png).convert("RGB"); jpg = "site_scroll.jpg"
+        im.save(os.path.join(media_dir, jpg), quality=86); os.remove(png)
+        log(f"captured {url} ({im.height}px tall)")
+        return {"mode": "scroll", "shot": jpg, "shot_px": im.height}
+    log(f"could not capture {url} ({info.get('error', 'unknown error')}); trying the site's share image")
+    try:
+        card = MEDIA.share_card(url, media_dir)
+    except Exception as e:
+        card = None; log(f"share image failed: {e}")
+    if card:
+        log(f"website scene uses the share image of {url} ({card[1]}x{card[2]})")
+        return {"mode": "card", "shot": card[0], "card_w": card[1], "card_h": card[2]}
+    log(f"no share image for {url}; website scene shows the logo and address instead")
+    return {"mode": "logo"}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("video_dir", help="folder containing video.json, e.g. videos/docsdocs")
@@ -296,6 +332,22 @@ def main():
     for s in scenes:
         if s.get("photos"): s["photos"] = [media(p) for p in s["photos"]]
         if s.get("photo"): s["photo"] = media(s["photo"])
+
+    # website scroll scenes: capture the real site now; drop the scene if it can't be captured
+    keep = []
+    for s in scenes:
+        if s["type"] == "website":
+            shot = capture_website(s.get("url") or (cfg.get("images") or {}).get("logo_domain") or cfg.get("url"), os.path.join(build, "media"))
+            if not shot: continue
+            s.update(shot)
+            s["url_label"] = re.sub(r"^(https?://)?(www\.)?", "", s.get("url") or cfg.get("url", "")).rstrip("/")
+        keep.append(s)
+    if len(keep) != len(scenes):
+        scenes[:] = keep
+        lines, scene_of_line = [], []
+        for i, s in enumerate(scenes):
+            for ln in s["lines"]:
+                lines.append(ln); scene_of_line.append(i)
 
     # 1-2. voice + assembly
     paths = make_voice(vdir, lines, cfg.get("voice", {}), a.skip_voice)

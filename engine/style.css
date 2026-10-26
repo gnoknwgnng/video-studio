@@ -130,3 +130,21 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--
 #brand .lockup { font-size: 44px; }
 #brand .lockup .wm { font-size: 1em; }
 #brand .lockup .ico { height: 1em; }
+
+/* website: the real site scrolling inside a phone */
+.sc-website .kick { top: 190px; font-size: 26px; color: var(--primary); }
+.sc-website .t { top: 232px; height: 150px; font-size: 76px; }
+.sc-website .phone { position: absolute; left: 240px; top: 410px; width: 600px; height: 1170px; border-radius: 64px; background: #111; padding: 16px; box-shadow: 0 40px 90px var(--ink-18), 0 0 0 3px #2a2a2a inset; }
+.sc-website .screen { width: 100%; height: 100%; border-radius: 50px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
+.sc-website .bar { height: 106px; flex: none; display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding-bottom: 16px; background: #f2f3f5; color: #3c4043; font-family: 'Inter'; font-weight: 600; font-size: 26px; border-bottom: 1px solid #e1e3e6; }
+.sc-website .view { flex: 1; overflow: hidden; position: relative; }
+.sc-website .shot { display: block; width: 100%; will-change: transform; }
+.sc-website .view.card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; background: #0f1115; }
+.sc-website .view.card .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(28px) brightness(0.55); }
+.sc-website .view.card .cardimg { position: relative; width: 92%; max-height: 70%; object-fit: contain; border-radius: 22px; box-shadow: 0 24px 60px rgba(0,0,0,0.45); }
+.sc-website .view.card .site { position: relative; color: #fff; font-family: 'Inter'; font-weight: 700; font-size: 34px; letter-spacing: 0.5px; }
+.sc-website .view.logo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 44px; background: linear-gradient(180deg, #fff 0%, var(--background) 100%); }
+.sc-website .view.logo .biglogo { position: relative; left: auto; right: auto; width: 82%; height: 190px; }
+.sc-website .view.logo .biglogo .wm, .sc-website .view.logo .biglogo .lockup { font-size: 96px; }
+.sc-website .view.logo .site { color: var(--ink); font-family: 'Inter'; font-weight: 700; font-size: 36px; }
+.sc-website .view.logo .visit { padding: 22px 52px; border-radius: 999px; background: var(--primary); color: #fff; font-family: 'Inter'; font-weight: 700; font-size: 32px; }

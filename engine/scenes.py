@@ -308,10 +308,65 @@ def end(s, c):
     return html, js
 
 
+def website(s, c):
+    """The real website scrolling inside a phone frame (screenshot captured by capture_site.cjs)."""
+    S = f"#s{c.i}"
+    SCREEN_W, VIEW_H = 568, 1032                       # screen width and visible height in video pixels
+    img_h = round(s.get("shot_px", 2000) * SCREEN_W / 780)
+    dist = max(0, img_h - VIEW_H)
+    lock = '<svg width="22" height="22" viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/></svg>'
+    html = f'''<div class="ctr k kick">{E(s.get("kicker", "See it live"))}</div>
+        <div class="ctr sf t fit">{E(s.get("title", ""))}</div>
+        <div class="phone"><div class="screen">
+          <div class="bar">{lock}<span>{E(s.get("url_label", c.url))}</span></div>
+          <div class="view"><img class="shot" src="media/{E(s.get("shot", ""))}" style="height:{img_h}px" alt="" /></div>
+        </div></div>'''
+    if s.get("mode") == "logo":   # no capture and no share image: logo + address on a clean page
+        html = html.replace(f'<div class="view"><img class="shot" src="media/{E(s.get("shot", ""))}" style="height:{img_h}px" alt="" /></div>',
+            f'<div class="view logo">{c.logo("biglogo cardlogo")}<div class="site">{E(s.get("url_label", c.url))}</div>'
+            f'<div class="visit">Visit website</div></div>')
+        js = f'''tl.fromTo("{S} .kick, {S} .t", {{ y: 40, opacity: 0 }}, {{ y: 0, opacity: 1, duration: 0.45, ease: snap, stagger: 0.08 }}, {c.sb + 0.05:.3f});
+      tl.fromTo("{S} .phone", {{ y: 1100, rotation: 4 }}, {{ y: 0, rotation: 0, duration: 0.7, ease: "power3.out" }}, {c.sb + 0.15:.3f});
+      tl.fromTo("{S} .cardlogo", {{ scale: 0.6, opacity: 0 }}, {{ scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.7)" }}, {c.sb + 0.75:.3f});
+      tl.fromTo("{S} .site, {S} .visit", {{ y: 30, opacity: 0 }}, {{ y: 0, opacity: 1, duration: 0.45, ease: snap, stagger: 0.12 }}, {c.sb + 1.1:.3f});
+      tl.to("{S} .visit", {{ scale: 1.06, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }}, {c.sb + 1.8:.3f});
+'''
+        c.sfx("pop", c.sb + 0.3, 0.45, 900); c.sfx("pop", c.sb + 0.8, 0.4, 1200)
+        js += "      " + exit_up(c, f"{S} .kick, {S} .t, {S} .phone")
+        return html, js
+    if s.get("mode") == "card":   # page couldn't be captured: the site's own share image, slow zoom
+        img = E(s.get("shot", ""))
+        html = html.replace(f'<div class="view"><img class="shot" src="media/{img}" style="height:{img_h}px" alt="" /></div>',
+            f'<div class="view card"><img class="bg" src="media/{img}" alt="" /><img class="cardimg" src="media/{img}" alt="" />'
+            f'<div class="site">{E(s.get("url_label", c.url))}</div></div>')
+        js = f'''tl.fromTo("{S} .kick, {S} .t", {{ y: 40, opacity: 0 }}, {{ y: 0, opacity: 1, duration: 0.45, ease: snap, stagger: 0.08 }}, {c.sb + 0.05:.3f});
+      tl.fromTo("{S} .phone", {{ y: 1100, rotation: 4 }}, {{ y: 0, rotation: 0, duration: 0.7, ease: "power3.out" }}, {c.sb + 0.15:.3f});
+      tl.fromTo("{S} .cardimg", {{ scale: 0.86, opacity: 0 }}, {{ scale: 1, opacity: 1, duration: 0.6, ease: snap }}, {c.sb + 0.7:.3f});
+      tl.fromTo("{S} .bg", {{ scale: 1.15 }}, {{ scale: 1.35, duration: {max(1.0, c.se - c.sb - 0.8):.3f}, ease: "none" }}, {c.sb + 0.15:.3f});
+      tl.to("{S} .cardimg", {{ scale: 1.08, duration: {max(1.0, c.se - c.sb - 1.6):.3f}, ease: "sine.inOut" }}, {c.sb + 1.3:.3f});
+      tl.fromTo("{S} .site", {{ y: 30, opacity: 0 }}, {{ y: 0, opacity: 1, duration: 0.45, ease: snap }}, {c.sb + 1.1:.3f});
+'''
+        c.sfx("pop", c.sb + 0.3, 0.45, 900); c.sfx("whoosh", c.sb + 0.7, 0.25)
+        js += "      " + exit_up(c, f"{S} .kick, {S} .t, {S} .phone")
+        return html, js
+    t0, t1 = c.sb + 1.4, max(c.sb + 3, c.se - 0.8)
+    seg = (t1 - t0) / 3
+    js = f'''tl.fromTo("{S} .kick, {S} .t", {{ y: 40, opacity: 0 }}, {{ y: 0, opacity: 1, duration: 0.45, ease: snap, stagger: 0.08 }}, {c.sb + 0.05:.3f});
+      tl.fromTo("{S} .phone", {{ y: 1100, rotation: 4 }}, {{ y: 0, rotation: 0, duration: 0.7, ease: "power3.out" }}, {c.sb + 0.15:.3f});
+'''
+    for k in range(3):   # scroll in three moves with short pauses, like a person reading
+        a = t0 + k * seg
+        js += f'      tl.to("{S} .shot", {{ y: {-round(dist * (k + 1) / 3)}, duration: {seg * 0.7:.3f}, ease: "power2.inOut" }}, {a:.3f});\n'
+        c.sfx("whoosh", a, 0.25)
+    c.sfx("pop", c.sb + 0.3, 0.45, 900)
+    js += "      " + exit_up(c, f"{S} .kick, {S} .t, {S} .phone")
+    return html, js
+
+
 def json_list(xs):
     return "[" + ",".join(f"{x:.3f}" for x in xs) + "]"
 
 
 BUILDERS = {"problem": problem, "stats": stats, "intro": intro, "steps": steps, "flip": flip,
-            "question": question, "compare": compare, "end": end}
+            "question": question, "compare": compare, "end": end, "website": website}
 HIDE_BRAND = {"intro", "end"}
