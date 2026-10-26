@@ -1,0 +1,216 @@
+{
+  "company": "BSE",
+  "url": "https://www.bse.com",
+  "colors": {
+    "primary": "#0A1F44",
+    "accent": "#1E3A70",
+    "alert": "#D64545",
+    "ink": "#0D0D0D",
+    "background": "#F5F7FA"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "images": {
+    "logo_domain": "bse.com"
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Investors lack real‑time data",
+      "title_em": "for Indian markets.",
+      "alert_word": "markets.",
+      "icon": "building",
+      "meter_label": "Information gap",
+      "cards": [
+        {
+          "text": "Delayed quotes",
+          "cue": "delayed"
+        },
+        {
+          "text": "Complex filings",
+          "cue": "complex"
+        },
+        {
+          "text": "Limited research",
+          "cue": "limited"
+        },
+        {
+          "text": "Fragmented platforms",
+          "cue": "fragmented"
+        }
+      ],
+      "image_query": "busy stock traders on floor",
+      "lines": [
+        {
+          "say": "For Indian investors, accessing reliable market data is a challenge. Delayed quotes. Complex filings. Limited research. Fragmented platforms.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "gateway",
+      "tagline": "Your gateway to Indian equities",
+      "tagline_em": "simplified.",
+      "tagline_cue": "gateway",
+      "photos": [],
+      "image_queries": [
+        "trading floor bse",
+        "investor looking at stock chart"
+      ],
+      "tags": [
+        {
+          "text": "Retail investors",
+          "cue": "retail"
+        },
+        {
+          "text": "Financial advisors",
+          "cue": "financial"
+        },
+        {
+          "text": "Institutional traders",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "That's where BSE comes in. Your gateway to Indian equities, simplified for retail investors, financial advisors, and institutional traders.",
+          "seed": 43
+        }
+      ]
+    },
+    {
+      "type": "website",
+      "url": "bse.com",
+      "kicker": "See it live",
+      "title": "Trade, track and research Indian stocks",
+      "lines": [
+        {
+          "say": "On BSE.com you can view live market quotes, place orders, and explore detailed company filings—all from your phone.",
+          "seed": 44
+        },
+        {
+          "say": "The dashboard shows indices, top gainers, and personalized watchlists.",
+          "seed": 45
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "title": "How it works",
+      "steps": [
+        {
+          "title": "Create account",
+          "chips": [
+            "Register",
+            "KYC"
+          ],
+          "cue": "create"
+        },
+        {
+          "title": "Fund & trade",
+          "chips": [
+            "Add funds",
+            "Buy stocks"
+          ],
+          "cue": "fund"
+        },
+        {
+          "title": "Monitor & grow",
+          "chips": [
+            "Watchlist",
+            "Analytics"
+          ],
+          "cue": "monitor"
+        }
+      ],
+      "image_query": "user on mobile trading app",
+      "lines": [
+        {
+          "say": "Create an account by completing a quick KYC registration.",
+          "seed": 46
+        },
+        {
+          "say": "Fund your wallet and start buying stocks instantly.",
+          "seed": 47
+        },
+        {
+          "say": "Monitor your portfolio with real‑time analytics and alerts.",
+          "seed": 48
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "BSE",
+      "post": "different?",
+      "em_cue": "B",
+      "mark_cue": "different",
+      "image_query": "person pondering stock chart",
+      "lines": [
+        {
+          "say": "So what makes B S E different?",
+          "sub": "So what makes BSE different?",
+          "seed": 49
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Other exchanges",
+      "right_label": "BSE",
+      "rows": [
+        {
+          "left": "Limited Indian listings",
+          "right": "Over 5,500 Indian securities",
+          "left_cue": "limited",
+          "right_cue": "over"
+        },
+        {
+          "left": "Slow data feeds",
+          "right": "Real‑time market data",
+          "left_cue": "slow",
+          "right_cue": "real"
+        },
+        {
+          "left": "Complex order types",
+          "right": "Simple buy/sell interface",
+          "left_cue": "complex",
+          "right_cue": "simple"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Other exchanges offer limited Indian listings. BSE provides over 5,500 Indian securities.",
+          "seed": 50
+        },
+        {
+          "say": "They suffer slow data feeds, while BSE delivers real‑time market data.",
+          "seed": 51
+        },
+        {
+          "say": "Complex order types become simple with BSE's buy/sell interface.",
+          "seed": 52
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Invest with confidence",
+      "tagline_em": "on BSE",
+      "logo_cue": "BSE",
+      "tagline_cue": "Invest",
+      "image_query": "confident investor with laptop",
+      "lines": [
+        {
+          "say": "Invest with confidence on BSE.",
+          "seed": 53
+        }
+      ]
+    }
+  ]
+}
