@@ -1,0 +1,199 @@
+{
+  "company": "DubaiGuide",
+  "url": "",
+  "colors": {
+    "primary": "#0A3D62",
+    "accent": "#4A90E2",
+    "alert": "#D64545",
+    "ink": "#0D0D0D",
+    "background": "#F5F7FA"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "images": {
+    "logo_domain": ""
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Immigration info is",
+      "title_em": "hard to trust.",
+      "alert_word": "trust.",
+      "icon": "shield",
+      "meter_label": "Confusion level",
+      "cards": [
+        {
+          "text": "Complex paperwork",
+          "cue": "paperwork"
+        },
+        {
+          "text": "Visa delays",
+          "cue": "delays"
+        },
+        {
+          "text": "Hidden costs",
+          "cue": "costs"
+        },
+        {
+          "text": "Online scams",
+          "cue": "scams"
+        }
+      ],
+      "image_query": "confused traveler at airport",
+      "lines": [
+        {
+          "say": "Immigration info is hard to trust. Complex paperwork. Visa delays. Hidden costs. Online scams.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "I'm",
+      "tagline": "Your fast‑track",
+      "tagline_em": "to Dubai",
+      "tagline_cue": "fast",
+      "image_queries": [
+        "smiling influencer with Dubai skyline",
+        "group video call with participants"
+      ],
+      "tags": [
+        {
+          "text": "Free webinars",
+          "cue": "webinars"
+        },
+        {
+          "text": "One‑on‑one consults",
+          "cue": "consults"
+        },
+        {
+          "text": "Live Q&A",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "I'm Alex, your fast guide to Dubai, offering free webinars, one‑on‑one consults, and live Q&A.",
+          "seed": 43
+        }
+      ],
+      "photos": []
+    },
+    {
+      "type": "steps",
+      "title": "How to move",
+      "steps": [
+        {
+          "title": "Eligibility check",
+          "chips": [
+            "Quick quiz",
+            "Eligibility list"
+          ],
+          "cue": "Check"
+        },
+        {
+          "title": "Document prep",
+          "chips": [
+            "Checklist",
+            "Templates"
+          ],
+          "cue": "Prepare"
+        },
+        {
+          "title": "Apply & Arrive",
+          "chips": [
+            "Online filing",
+            "Landing support"
+          ],
+          "cue": "Apply"
+        }
+      ],
+      "image_query": "person filling visa forms",
+      "lines": [
+        {
+          "say": "Check your eligibility with our quick quiz.",
+          "seed": 44
+        },
+        {
+          "say": "Prepare documents using our checklist templates.",
+          "seed": 45
+        },
+        {
+          "say": "Apply online and land in Dubai with confidence.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "DubaiGuide",
+      "post": "different?",
+      "em_cue": "dubai",
+      "mark_cue": "different",
+      "lines": [
+        {
+          "say": "So what makes Dubai Guide different?",
+          "seed": 47
+        }
+      ],
+      "image_query": "influencer pointing at Dubai map"
+    },
+    {
+      "type": "compare",
+      "left_label": "Other sources",
+      "right_label": "DubaiGuide",
+      "rows": [
+        {
+          "left": "Generic blogs",
+          "right": "Tailored video guides",
+          "left_cue": "generic",
+          "right_cue": "tailored"
+        },
+        {
+          "left": "Outdated forms",
+          "right": "Live updates",
+          "left_cue": "outdated",
+          "right_cue": "live"
+        },
+        {
+          "left": "Hidden fees",
+          "right": "Transparent pricing",
+          "left_cue": "hidden",
+          "right_cue": "transparent"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Generic blogs give vague advice. Tailored video guides show exact steps.",
+          "seed": 48
+        },
+        {
+          "say": "Outdated forms mislead you. Live updates keep you current.",
+          "seed": 49
+        },
+        {
+          "say": "Hidden fees surprise you. Transparent pricing shows all costs.",
+          "seed": 50
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Start your journey",
+      "tagline_em": "to Dubai",
+      "logo_cue": "dubai",
+      "tagline_cue": "Start",
+      "lines": [
+        {
+          "say": "Start your journey to Dubai with Dubai Guide.",
+          "seed": 51
+        }
+      ],
+      "image_query": "happy family with suitcase at Dubai airport"
+    }
+  ]
+}
