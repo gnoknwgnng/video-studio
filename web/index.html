@@ -20,9 +20,9 @@
   .who { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--dim); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
   label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 14px 0 6px; }
-  input[type=text], input[type=url], input[type=password] { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 11px 13px; font: 15px Inter; }
+  input[type=text], input[type=url], input[type=password], textarea { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 11px 13px; font: 15px Inter; box-sizing: border-box; }
   input:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--pri); outline-offset: 2px; }
-  input.big { font-size: 19px; padding: 15px 16px; border-radius: 14px; }
+  input.big, textarea.big { font-size: 16px; padding: 14px 16px; border-radius: 14px; min-height: 85px; resize: vertical; line-height: 1.45; }
   .btn { border: 0; border-radius: 10px; padding: 12px 18px; font: 700 15px Inter; cursor: pointer; background: var(--pri); color: var(--pri-ink); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
   .btn:disabled { opacity: .55; cursor: default; }
   .btn.ghost { background: none; color: var(--pri); border: 1px solid var(--line); padding: 8px 14px; font-size: 14px; }
@@ -92,11 +92,11 @@
       <form class="card" id="makeForm">
         <h2>New video</h2>
         <label for="topic">What should the video explain?</label>
-        <input type="text" id="topic" class="big" maxlength="140" placeholder="e.g. Why Amazon became the biggest online store" required />
+        <textarea id="topic" class="big" rows="3" maxlength="4000" placeholder="Type a topic (e.g. Why Amazon won) or paste any full job post, announcement, flyer..." required></textarea>
         <details>
           <summary>Options</summary>
           <label for="notes">Notes for the AI (optional)</label>
-          <input type="text" id="notes" maxlength="300" placeholder="Audience, tone, facts to include" />
+          <textarea id="notes" rows="2" maxlength="4000" placeholder="Audience, tone, or specific facts to emphasize"></textarea>
           <label for="logo">Logo image link (optional)</label>
           <input type="url" id="logo" placeholder="https://example.com/logo.png" />
           <div class="check"><input type="checkbox" id="sitePhotos" /><label for="sitePhotos" style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink)">Use photos from the company's own website <span class="hint" style="display:block;margin:2px 0 0">Only if you have permission to use them.</span></label></div>

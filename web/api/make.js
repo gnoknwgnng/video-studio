@@ -6,8 +6,8 @@ module.exports = async (req, res) => {
   const user = requireUser(req, res); if (!user) return;
   const b = await readBody(req);
   const topic = String(b.topic || "").trim(), notes = String(b.notes || "").trim(), logo = String(b.logo || "").trim();
-  if (topic.length < 4 || topic.length > 140) return send(res, 400, { error: "The topic must be 4–140 characters." });
-  if (notes.length > 300) return send(res, 400, { error: "Notes must be 300 characters or less." });
+  if (topic.length < 4 || topic.length > 4000) return send(res, 400, { error: "Please enter at least 4 characters." });
+  if (notes.length > 4000) return send(res, 400, { error: "Notes must be 4000 characters or less." });
   if (logo && !/^https:\/\/[^\s"'<>]+$/i.test(logo)) return send(res, 400, { error: "The logo must be an https:// image link." });
   try {
     const out = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, {

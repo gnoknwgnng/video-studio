@@ -303,8 +303,66 @@ def apply_website_rule(cfg, dom):
     return cfg
 
 
+DIGEST_SYSTEM = """You are an expert video producer. The user provided raw text, a job posting, announcement, or broadcast message to turn into an explainer video.
+Your job is to digest it so that no critical fact is lost while creating a punchy topic title.
+
+Return a JSON object with:
+1. "topic": A crisp, punchy 3-8 word title for the video (e.g. "Alvineient: 4 High-Growth Job Roles Across India").
+2. "company": The organization or brand name (1-3 words, e.g. "Alvineient").
+3. "url": The website domain or link if mentioned, else "".
+4. "notes": A comprehensive bulleted summary of ALL important details, facts, numbers, roles, CTC / salary figures, perks, locations, requirements, and call to action (emails, forms) so every single detail is included in the video scenes.
+
+Return ONLY valid JSON."""
+
+
+def digest_raw_input(topic, notes="", model="openai/gpt-oss-120b", key=None):
+    """If the topic is long or multi-line (e.g. a pasted job circular, flyer, or announcement),
+    use Groq to extract a clean topic title and compile all critical details into notes."""
+    raw = (topic or "").strip()
+    is_raw_post = (
+        len(raw) > 75 or
+        "\n" in raw or
+        any(k in raw.lower() for k in ("hiring", "job opening", "apply now", "ctc:", "salary:", "apply through", "form:", "mailto:"))
+    )
+    if not is_raw_post:
+        return topic, notes
+
+    key = key or os.environ.get("GROQ_API_KEY")
+    if not key:
+        first_line = raw.split("\n")[0][:60].strip()
+        return first_line, f"{raw}\n{notes}".strip()
+
+    print("[script] raw announcement/post detected; extracting topic and key facts...", flush=True)
+    user_content = f"RAW CONTENT:\n{raw}\n" + (f"\nADDITIONAL CREATOR NOTES:\n{notes}" if notes else "")
+    try:
+        res = call_groq(
+            [{"role": "system", "content": DIGEST_SYSTEM}, {"role": "user", "content": user_content}],
+            key, model, temperature=0.1, effort="low"
+        )
+        data = parse_json(res)
+        extracted_topic = str(data.get("topic") or "").strip() or raw.split("\n")[0][:60].strip()
+        extracted_notes = str(data.get("notes") or "").strip()
+        company = str(data.get("company") or "").strip()
+        url = str(data.get("url") or "").strip()
+
+        combined = []
+        if company: combined.append(f"Company/Subject: {company}")
+        if url: combined.append(f"Website/URL: {url}")
+        if extracted_notes: combined.append(extracted_notes)
+        if notes: combined.append(f"Creator notes: {notes}")
+
+        final_notes = "\n".join(combined)
+        print(f"[script] auto-extracted topic: '{extracted_topic}'", flush=True)
+        return extracted_topic, final_notes
+    except Exception as e:
+        print(f"[script] auto-extraction fallback ({e})", flush=True)
+        first_line = raw.split("\n")[0][:60].strip()
+        return first_line, f"{raw}\n{notes}".strip()
+
+
 def write_script(topic, notes="", model="openai/gpt-oss-120b", key=None, tries=3):
-    return apply_website_rule(_write_script(topic, notes, model, key, tries), topic_domain(topic))
+    clean_topic, clean_notes = digest_raw_input(topic, notes, model, key)
+    return apply_website_rule(_write_script(clean_topic, clean_notes, model, key, tries), topic_domain(clean_topic))
 
 
 def _write_script(topic, notes="", model="openai/gpt-oss-120b", key=None, tries=3):
@@ -367,10 +425,11 @@ def main():
     ap.add_argument("--logo", default="", help="optional logo image URL")
     ap.add_argument("--site-photos", action="store_true", help="use photos from the company's own website (needs permission)")
     a = ap.parse_args()
-    folder = slugify(a.folder or a.topic)
+    clean_topic, clean_notes = digest_raw_input(a.topic, a.notes, a.model)
+    folder = slugify(a.folder or clean_topic)
     vdir = os.path.join(REPO, "videos", folder)
-    print(f"[script] writing '{a.topic}' with {a.model} -> videos/{folder}/video.json", flush=True)
-    cfg = write_script(a.topic, a.notes, a.model)
+    print(f"[script] writing '{clean_topic}' with {a.model} -> videos/{folder}/video.json", flush=True)
+    cfg = write_script(clean_topic, clean_notes, a.model)
     if a.logo: cfg["logo"] = a.logo
     if a.site_photos: cfg.setdefault("images", {})["site_photos"] = True
     os.makedirs(vdir, exist_ok=True)
