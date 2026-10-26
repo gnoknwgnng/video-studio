@@ -1,0 +1,200 @@
+{
+  "company": "Israel Gaza",
+  "url": "",
+  "colors": {
+    "primary": "#0a3d62",
+    "accent": "#3c91e6",
+    "alert": "#d9534f",
+    "ink": "#212529",
+    "background": "#f8f9fa"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "images": {
+    "logo_domain": ""
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The conflict",
+      "title": "Decades of tension",
+      "title_em": "fueling today's war",
+      "alert_word": "war",
+      "icon": "shield",
+      "meter_label": "Tension level",
+      "cards": [
+        {
+          "text": "Territorial disputes",
+          "cue": "territorial"
+        },
+        {
+          "text": "Security fears",
+          "cue": "security"
+        },
+        {
+          "text": "Humanitarian crisis",
+          "cue": "humanitarian"
+        },
+        {
+          "text": "Misinformation",
+          "cue": "misinformation"
+        }
+      ],
+      "image_query": "protest signs conflict border",
+      "lines": [
+        {
+          "say": "Decades of tension fuel today's war. Territorial disputes. Security fears. Humanitarian crisis. Misinformation.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "is",
+      "tagline": "Complex history, urgent present",
+      "tagline_em": "now",
+      "tagline_cue": "recognizing",
+      "image_queries": [
+        "historic map middle east",
+        "people watching news"
+      ],
+      "tags": [
+        {
+          "text": "Historical roots",
+          "cue": "roots"
+        },
+        {
+          "text": "Regional stakes",
+          "cue": "stakes"
+        },
+        {
+          "text": "Human impact",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "Understanding Israel Gaza means tracing history's roots, recognizing regional stakes, and seeing the human impact, now.",
+          "seed": 43
+        }
+      ],
+      "photos": []
+    },
+    {
+      "type": "steps",
+      "title": "Key factors",
+      "steps": [
+        {
+          "title": "Historical roots",
+          "chips": [
+            "Mandate era",
+            "1948 war"
+          ],
+          "cue": "historical"
+        },
+        {
+          "title": "Current flashpoints",
+          "chips": [
+            "Gaza blockade",
+            "settlement expansion"
+          ],
+          "cue": "current"
+        },
+        {
+          "title": "Humanitarian fallout",
+          "chips": [
+            "Casualties",
+            "Displacement",
+            "Aid hurdles"
+          ],
+          "cue": "humanitarian"
+        }
+      ],
+      "image_query": "timeline historical map",
+      "lines": [
+        {
+          "say": "Historical roots include the Mandate era and the 1948 war, shaping today's borders.",
+          "seed": 44
+        },
+        {
+          "say": "Current flashpoints involve the Gaza blockade and settlement expansions, sparking frequent escalations.",
+          "seed": 45
+        },
+        {
+          "say": "Humanitarian fallout sees casualties, displacement, and aid hurdles affecting civilians daily.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "Israel Gaza",
+      "post": "different?",
+      "em_cue": "Israel",
+      "mark_cue": "different",
+      "image_query": "people discussing conflict",
+      "lines": [
+        {
+          "say": "So what makes Israel Gaza different?",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Other narratives",
+      "right_label": "Israel Gaza",
+      "rows": [
+        {
+          "left": "Simplified blame",
+          "right": "Complex causes",
+          "left_cue": "simplified",
+          "right_cue": "complex"
+        },
+        {
+          "left": "Static maps",
+          "right": "Evolving borders",
+          "left_cue": "static",
+          "right_cue": "evolving"
+        },
+        {
+          "left": "One‑sided aid",
+          "right": "Humanitarian needs all sides",
+          "left_cue": "one‑sided",
+          "right_cue": "humanitarian"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Unlike simplified blame, Israel Gaza involves complex causes.",
+          "seed": 48
+        },
+        {
+          "say": "Static maps miss evolving borders that shape daily realities.",
+          "seed": 49
+        },
+        {
+          "say": "One‑sided aid overlooks humanitarian needs on all sides.",
+          "seed": 50
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Stay informed",
+      "tagline_em": "act wisely",
+      "logo_cue": "wisely",
+      "tagline_cue": "stay",
+      "image_query": "person reading news on phone",
+      "lines": [
+        {
+          "say": "Stay informed, act wisely – Israel Gaza.",
+          "seed": 51
+        }
+      ]
+    }
+  ]
+}
