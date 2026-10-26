@@ -262,7 +262,25 @@ def iter_cues(s):
 def tidy(cfg):
     """Small safe fixes: seeds, voice settings, colour format, alert word."""
     seed = 42
+    is_img_file = lambda val: isinstance(val, str) and (val.startswith(("http://", "https://")) or (any(val.lower().endswith(e) for e in (".png", ".jpg", ".jpeg", ".webp", ".svg")) and " " not in val))
+    if cfg.get("logo") and not is_img_file(cfg["logo"]):
+        cfg.pop("logo", None)
+
     for s in cfg["scenes"]:
+        if s.get("photo") and not is_img_file(s["photo"]):
+            if not s.get("image_query"):
+                s["image_query"] = str(s["photo"]).strip()
+            s.pop("photo", None)
+        if s.get("photos"):
+            valid_p, extra_q = [], []
+            for p in s["photos"]:
+                if is_img_file(p):
+                    valid_p.append(p)
+                elif isinstance(p, str) and p.strip():
+                    extra_q.append(p.strip())
+            s["photos"] = valid_p
+            if extra_q and not s.get("image_queries"):
+                s["image_queries"] = extra_q
         for ln in s["lines"]:
             ln["seed"] = int(ln.get("seed", seed)) if str(ln.get("seed", "")).lstrip("-").isdigit() else seed
             if ln.get("sub") == ln.get("say"): ln.pop("sub", None)

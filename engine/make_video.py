@@ -311,27 +311,56 @@ def main():
     for f in os.listdir(vdir):  # logo + photos stored next to video.json
         if f.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".svg")): shutil.copy(os.path.join(vdir, f), os.path.join(build, "media", f))
 
-    def media(ref):
-        """Local file name, or download an http(s) URL into media/ and return its file name."""
-        if not ref or not str(ref).startswith(("http://", "https://")):
-            if ref and not os.path.exists(os.path.join(build, "media", ref)): sys.exit(f'"{ref}" not found next to video.json')
+    used_media = set()
+
+    def media(ref, aspect="tall"):
+        """Local file name, download an http(s) URL, or search online for a photo query. Returns file name or None."""
+        if not ref:
+            return None
+        ref = str(ref).strip()
+        if not ref:
+            return None
+        if ref.startswith(("http://", "https://")):
+            import urllib.request
+            ext = os.path.splitext(ref.split("?")[0])[1].lower()
+            fn = "dl_" + hashlib.sha1(ref.encode()).hexdigest()[:10] + (ext if ext in (".png", ".jpg", ".jpeg", ".webp", ".svg") else ".png")
+            dst = os.path.join(build, "media", fn)
+            if os.path.exists(dst):
+                return fn
+            try:
+                req = urllib.request.Request(ref, headers={"User-Agent": "Mozilla/5.0 video-studio"})
+                with urllib.request.urlopen(req, timeout=30) as r, open(dst, "wb") as f:
+                    f.write(r.read())
+                log("downloaded", ref)
+                return fn
+            except Exception as e:
+                log(f"WARN download failed for '{ref}': {e}")
+                return None
+
+        if os.path.exists(os.path.join(build, "media", ref)):
             return ref
-        import urllib.request
-        ext = os.path.splitext(ref.split("?")[0])[1].lower()
-        fn = "dl_" + hashlib.sha1(ref.encode()).hexdigest()[:10] + (ext if ext in (".png", ".jpg", ".jpeg", ".webp", ".svg") else ".png")
-        req = urllib.request.Request(ref, headers={"User-Agent": "Mozilla/5.0 video-studio"})
-        with urllib.request.urlopen(req, timeout=30) as r, open(os.path.join(build, "media", fn), "wb") as f: f.write(r.read())
-        log("downloaded", ref)
-        return fn
+
+        log(f"'{ref}' not found next to video.json; attempting online photo search...")
+        try:
+            found = MEDIA.find_photo(ref, os.path.join(build, "media"), used_media, credits, aspect)
+            if found:
+                return found
+        except Exception as e:
+            log(f"photo fallback search failed for '{ref}': {e}")
+
+        log(f"WARN: media '{ref}' not found; proceeding without it")
+        return None
 
     credits = MEDIA.enrich(cfg, os.path.join(build, "media"))   # free real photos + logo (no keys)
     os.makedirs(os.path.join(vdir, "out"), exist_ok=True)
-    open(os.path.join(vdir, "out", "credits.md"), "w", encoding="utf-8").write(
-        ("Image credits:\n" + "\n".join(credits) + "\n") if credits else "")
     cfg["logo"] = media(cfg.get("logo"))
     for s in scenes:
-        if s.get("photos"): s["photos"] = [media(p) for p in s["photos"]]
-        if s.get("photo"): s["photo"] = media(s["photo"])
+        if s.get("photos"):
+            s["photos"] = [p for p in (media(p, "wide") for p in s["photos"]) if p]
+        if s.get("photo"):
+            s["photo"] = media(s["photo"], "tall")
+    open(os.path.join(vdir, "out", "credits.md"), "w", encoding="utf-8").write(
+        ("Image credits:\n" + "\n".join(credits) + "\n") if credits else "")
 
     # website scroll scenes: capture the real site now; drop the scene if it can't be captured
     keep = []
