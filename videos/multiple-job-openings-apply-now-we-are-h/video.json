@@ -1,0 +1,202 @@
+{
+  "company": "Job Openings",
+  "url": "",
+  "colors": {
+    "primary": "#0066CC",
+    "accent": "#99CCFF",
+    "alert": "#D64545",
+    "ink": "#0D0D0D",
+    "background": "#F5F9FF"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "images": {
+    "logo_domain": ""
+  },
+  "scenes": [
+    {
+      "type": "problem",
+      "kicker": "The problem",
+      "title": "Finding the right role",
+      "title_em": "is getting harder.",
+      "alert_word": "harder.",
+      "icon": "building",
+      "meter_label": "Frustration level",
+      "cards": [
+        {
+          "text": "Limited listings",
+          "cue": "listings"
+        },
+        {
+          "text": "Slow response",
+          "cue": "response"
+        },
+        {
+          "text": "Unclear requirements",
+          "cue": "requirements"
+        },
+        {
+          "text": "Remote confusion",
+          "cue": "remote"
+        }
+      ],
+      "image_query": "frustrated job seeker laptop coffee",
+      "lines": [
+        {
+          "say": "Job seekers, finding the right role is getting harder. Limited listings. Slow response. Unclear requirements. Remote confusion.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "comes",
+      "tagline": "Your next career move,",
+      "tagline_em": "starts here.",
+      "tagline_cue": "career",
+      "image_queries": [
+        "office interview handshake",
+        "remote worker home office"
+      ],
+      "tags": [
+        {
+          "text": "Recent grads",
+          "cue": "recent"
+        },
+        {
+          "text": "Career changers",
+          "cue": "career"
+        },
+        {
+          "text": "Experienced pros",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "That's where Job Openings comes in. Your next career move, starts here today for recent grads, career changers, and experienced pros.",
+          "seed": 43
+        }
+      ],
+      "photos": []
+    },
+    {
+      "type": "steps",
+      "title": "How to apply",
+      "steps": [
+        {
+          "title": "Search roles",
+          "chips": [
+            "Keywords",
+            "Location",
+            "Filters"
+          ],
+          "cue": "search"
+        },
+        {
+          "title": "Submit application",
+          "chips": [
+            "Resume",
+            "Cover letter",
+            "Portfolio"
+          ],
+          "cue": "submit"
+        },
+        {
+          "title": "Interview & hire",
+          "chips": [
+            "Video call",
+            "Onsite",
+            "Offer"
+          ],
+          "cue": "interview"
+        }
+      ],
+      "image_query": "candidate reviewing job listings tablet",
+      "lines": [
+        {
+          "say": "Search roles using keywords, location and filters.",
+          "seed": 44
+        },
+        {
+          "say": "Submit your application quickly with a resume, cover letter and portfolio.",
+          "seed": 45
+        },
+        {
+          "say": "Interview via video call or onsite and receive your offer.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "pre": "So what makes",
+      "em": "Job Openings",
+      "post": "different?",
+      "em_cue": "job",
+      "mark_cue": "different",
+      "image_query": "diverse team meeting office",
+      "lines": [
+        {
+          "say": "So what makes Job Openings different?",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Traditional job boards",
+      "right_label": "Job Openings",
+      "rows": [
+        {
+          "left": "Generic listings",
+          "right": "Curated premium roles",
+          "left_cue": "generic",
+          "right_cue": "curates"
+        },
+        {
+          "left": "Slow hiring",
+          "right": "Fast response",
+          "left_cue": "slow",
+          "right_cue": "fast"
+        },
+        {
+          "left": "Limited remote",
+          "right": "Onsite and remote",
+          "left_cue": "limit",
+          "right_cue": "onsite"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Traditional job boards show generic listings. Job Openings curates premium roles.",
+          "seed": 48
+        },
+        {
+          "say": "Boards often have slow hiring. Job Openings offers fast response.",
+          "seed": 49
+        },
+        {
+          "say": "Many limit remote options. Job Openings provides onsite and remote roles.",
+          "seed": 50
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Find your future",
+      "tagline_em": "today.",
+      "logo_cue": "openings",
+      "tagline_cue": "find",
+      "image_query": "happy employee receiving offer",
+      "lines": [
+        {
+          "say": "Find your future today. Job Openings.",
+          "seed": 51
+        }
+      ]
+    }
+  ]
+}
