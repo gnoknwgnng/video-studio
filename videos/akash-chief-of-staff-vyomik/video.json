@@ -1,0 +1,283 @@
+{
+  "company": "Vyomik Drones",
+  "url": "vyomikdrones.com",
+  "logo": "akash.png",
+  "colors": {
+    "primary": "#0284c7",
+    "accent": "#38bdf8",
+    "alert": "#ef4444",
+    "ink": "#0f172a",
+    "background": "#f8fafc"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "images": {
+    "enabled": false
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "logo_cue": "Akash",
+      "tagline": "Hi Jagadeesh sir,",
+      "tagline_em": "I'm Akash.",
+      "tagline_cue": "Akash",
+      "photos": [
+        "akash.png"
+      ],
+      "tags": [
+        {
+          "text": "Chief of Staff",
+          "cue": "Chief"
+        },
+        {
+          "text": "Vyomik Drones",
+          "cue": "Vyomik"
+        },
+        {
+          "text": "Hyderabad",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "Hi Jagadeesh sir, I'm Akash. Yep, that's me. Applying for Founder's Office and Chief of Staff at Vyomik Drones.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "problem",
+      "kicker": "The Challenge",
+      "title": "Scaling drone revenue channels moves at",
+      "title_em": "breakneck speed.",
+      "alert_word": "speed.",
+      "icon": "chip",
+      "meter_label": "Execution pressure",
+      "cards": [
+        {
+          "text": "Dealer & partner pipelines",
+          "cue": "pipelines"
+        },
+        {
+          "text": "Sales ops & follow-ups",
+          "cue": "followups"
+        },
+        {
+          "text": "Cross-functional fires",
+          "cue": "fires"
+        },
+        {
+          "text": "Keeping CRO unblocked",
+          "cue": "unblocked"
+        }
+      ],
+      "lines": [
+        {
+          "say": "I know what you're thinking. Scaling Vyomik Drones across dealerships and revenue channels moves at breakneck speed. Can one person manage CRO priorities, unblock teams, and drive ruthless followups? Fair question. Here's my answer in thirty-five seconds.",
+          "seed": 43
+        }
+      ]
+    },
+    {
+      "type": "stats",
+      "label": "Independent Execution",
+      "bars": [
+        {
+          "name": "VC Firms Mapped",
+          "value": 100,
+          "display": "2,000+",
+          "cue": "thousand"
+        },
+        {
+          "name": "Independent Ownership",
+          "value": 100,
+          "display": "100%",
+          "cue": "nobody"
+        }
+      ],
+      "callout": {
+        "em": "2,000+",
+        "text": "VC firms mapped with zero hand-holding",
+        "cue": "thousand",
+        "people": 5,
+        "empty": 0
+      },
+      "lines": [
+        {
+          "say": "I took VC Friend from a blank screen to a live platform mapping over two thousand VC firms. Nobody checking in. Extreme ownership from day one.",
+          "seed": 44
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "title": "Automated Revenue & Ops Systems",
+      "steps": [
+        {
+          "title": "Automated Dealer Ingestion",
+          "chips": [
+            "Distributors",
+            "GIS Clients",
+            "Inquiries"
+          ],
+          "cue": "automated"
+        },
+        {
+          "title": "Pipeline Tracking Workflows",
+          "chips": [
+            "Follow-ups",
+            "Milestones",
+            "Accountability"
+          ],
+          "cue": "tracking"
+        },
+        {
+          "title": "Real-Time CRO Dashboards",
+          "chips": [
+            "Daily MIS",
+            "Revenue Metrics",
+            "Blockers"
+          ],
+          "cue": "dashboards"
+        }
+      ],
+      "lines": [
+        {
+          "say": "I leverage AI and automations every day beyond the hype. I build custom tracking pipelines, automated follow-up workflows, and real-time MIS that keep sales, operations, and dealer pipelines moving without dropping a single lead.",
+          "seed": 45
+        }
+      ]
+    },
+    {
+      "type": "flip",
+      "title": "High Ownership Track Record",
+      "title_em": "Proven delivery at scale",
+      "front": {
+        "kicker": "Govt of India Grant",
+        "title": "Grant Winner",
+        "stamp": "₹15L",
+        "cue": "grant",
+        "rows": [
+          {
+            "k": "Govt Grant",
+            "v": "₹15,00,000",
+            "style": "ok"
+          },
+          {
+            "k": "Execution Time",
+            "v": "18+ Months",
+            "style": "ok"
+          }
+        ]
+      },
+      "back": {
+        "kicker": "End-to-End Ownership",
+        "title": "Multi-Org Delivery",
+        "rows": [
+          {
+            "k": "SreeVia AI",
+            "v": "Full Ownership",
+            "style": "ok",
+            "cue": "SreeVia"
+          },
+          {
+            "k": "Zylense",
+            "v": "Rapid Execution",
+            "style": "ok",
+            "cue": "Zylense"
+          },
+          {
+            "k": "Swecha",
+            "v": "Large Scale",
+            "style": "ok",
+            "cue": "Swecha"
+          }
+        ]
+      },
+      "lines": [
+        {
+          "say": "I won a fifteen-lakh government grant, and spent eighteen months owning end-to-end deliverables across SreeVia AI, Zylense, and Swecha.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Typical Assistant",
+      "right_label": "Akash's Founder's Cadence",
+      "rows": [
+        {
+          "left": "Waiting for instructions",
+          "right": "Monday: Dealer Pipeline & Priorities",
+          "left_cue": "Monday",
+          "right_cue": "review"
+        },
+        {
+          "left": "Chasing departments",
+          "right": "Wednesday: Cross-Functional Unblock",
+          "left_cue": "Wednesday",
+          "right_cue": "bottlenecks"
+        },
+        {
+          "left": "Passive updates",
+          "right": "Friday: Partner Activation & Revenue Closure",
+          "left_cue": "Friday",
+          "right_cue": "closure"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Dealership pipeline review on Monday. Cross-functional bottlenecks cleared by Wednesday. Partner activation and revenue tracker closed by Friday. That's the operating cadence I run.",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "revolution",
+      "tagline": "Scaling Vyomik Drones,",
+      "tagline_em": "beside Jagadeesh sir.",
+      "tagline_cue": "Jagadeesh",
+      "photos": [
+        "akash.png"
+      ],
+      "tags": [
+        {
+          "text": "Drone Tech",
+          "cue": "revolution"
+        },
+        {
+          "text": "Enterprise Sales",
+          "cue": "enterprise"
+        },
+        {
+          "text": "Deep Tech",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "And scaling India's drone tech revolution beside an enterprise sales leader like you, Jagadeesh sir? That's the masterclass I want to learn and execute every single day.",
+          "seed": 48
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "logo_cue": "delivered",
+      "tagline": "Give me your messiest challenge.",
+      "tagline_em": "I'll get it delivered.",
+      "tagline_cue": "delivered",
+      "url": "Vyomik Drones · Hyderabad · Akash",
+      "photo": "akash.png",
+      "lines": [
+        {
+          "say": "Give me the messiest operational challenge or partner pipeline on your desk. I'll get it delivered.",
+          "seed": 49
+        }
+      ]
+    }
+  ]
+}

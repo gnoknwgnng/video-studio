@@ -157,12 +157,12 @@
       "front": {
         "kicker": "Govt of India Grant",
         "title": "Grant Winner",
-        "stamp": "₹14.85L",
+        "stamp": "\u20b915L",
         "cue": "grant",
         "rows": [
           {
             "k": "Govt Grant",
-            "v": "₹14,84,535",
+            "v": "\u20b915,00,000",
             "style": "ok"
           },
           {
@@ -270,7 +270,7 @@
       "tagline": "Give me your messiest project.",
       "tagline_em": "I'll get it delivered.",
       "tagline_cue": "delivered",
-      "url": "Cognisol · Hyderabad · Akash",
+      "url": "Cognisol \u00b7 Hyderabad \u00b7 Akash",
       "photo": "akash.png",
       "lines": [
         {
