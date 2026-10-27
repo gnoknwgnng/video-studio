@@ -1,0 +1,283 @@
+{
+  "company": "Cognisol",
+  "url": "cognisol.com",
+  "logo": "akash.png",
+  "colors": {
+    "primary": "#0052cc",
+    "accent": "#00d4ff",
+    "alert": "#ef4444",
+    "ink": "#0f172a",
+    "background": "#f8fafc"
+  },
+  "voice": {
+    "exaggeration": 0.6,
+    "cfg_weight": 0.45
+  },
+  "images": {
+    "enabled": false
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "logo_cue": "Akash",
+      "tagline": "Hi Srikanth sir,",
+      "tagline_em": "I'm Akash.",
+      "tagline_cue": "Akash",
+      "photos": [
+        "akash.png"
+      ],
+      "tags": [
+        {
+          "text": "PMO & EA",
+          "cue": "PMO"
+        },
+        {
+          "text": "AI Data Centers",
+          "cue": "Centers"
+        },
+        {
+          "text": "Hyderabad",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "Hi Srikanth sir, I'm Akash. Yep, that's me. Applying for PMO and Executive Assistant for your AI Data Centers.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "problem",
+      "kicker": "The Challenge",
+      "title": "Scaling AI Data Centers is",
+      "title_em": "high-stakes execution.",
+      "alert_word": "execution.",
+      "icon": "chip",
+      "meter_label": "Execution pressure",
+      "cards": [
+        {
+          "text": "Strategic project tracking",
+          "cue": "strategic"
+        },
+        {
+          "text": "Daily MIS & dashboards",
+          "cue": "dashboards"
+        },
+        {
+          "text": "Cross-functional follow-ups",
+          "cue": "followups"
+        },
+        {
+          "text": "Keeping Srikanth sir ahead",
+          "cue": "ahead"
+        }
+      ],
+      "lines": [
+        {
+          "say": "I know what you're thinking. Scaling AI Data Centers is high-stakes execution. Can one person own strategic project tracking, daily MIS dashboards, cross-functional followups, and keep leadership ahead? Fair question. Here's my answer in thirty-five seconds.",
+          "seed": 43
+        }
+      ]
+    },
+    {
+      "type": "stats",
+      "label": "Proven Execution",
+      "bars": [
+        {
+          "name": "VC Firms Mapped",
+          "value": 100,
+          "display": "2,000+",
+          "cue": "thousand"
+        },
+        {
+          "name": "Independent Ownership",
+          "value": 100,
+          "display": "100%",
+          "cue": "nobody"
+        }
+      ],
+      "callout": {
+        "em": "2,000+",
+        "text": "VC firms mapped with zero hand-holding",
+        "cue": "thousand",
+        "people": 5,
+        "empty": 0
+      },
+      "lines": [
+        {
+          "say": "I took VC Friend from a vague idea to a live platform mapping over two thousand VC firms. Nobody checking in.",
+          "seed": 44
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "title": "AI-Powered PMO Workflow",
+      "steps": [
+        {
+          "title": "Automated Data Ingestion",
+          "chips": [
+            "Engineering",
+            "Procurement",
+            "Finance"
+          ],
+          "cue": "automated"
+        },
+        {
+          "title": "Real-Time Tracking Agents",
+          "chips": [
+            "Milestones",
+            "Risks",
+            "Escalations"
+          ],
+          "cue": "tracking"
+        },
+        {
+          "title": "Executive MIS Dashboards",
+          "chips": [
+            "Daily MIS",
+            "Board Decks",
+            "Action Items"
+          ],
+          "cue": "dashboards"
+        }
+      ],
+      "lines": [
+        {
+          "say": "I use AI every day beyond the hype. I build automated reporting pipelines and tracking workflows that turn scattered departmental updates into real-time executive dashboards.",
+          "seed": 45
+        }
+      ]
+    },
+    {
+      "type": "flip",
+      "title": "High Ownership Track Record",
+      "title_em": "Proven delivery at scale",
+      "front": {
+        "kicker": "Govt of India Grant",
+        "title": "Grant Winner",
+        "stamp": "₹14.85L",
+        "cue": "grant",
+        "rows": [
+          {
+            "k": "Govt Grant",
+            "v": "₹14,84,535",
+            "style": "ok"
+          },
+          {
+            "k": "Execution Time",
+            "v": "18+ Months",
+            "style": "ok"
+          }
+        ]
+      },
+      "back": {
+        "kicker": "End-to-End Ownership",
+        "title": "Multi-Org Delivery",
+        "rows": [
+          {
+            "k": "SreeVia AI",
+            "v": "Full Ownership",
+            "style": "ok",
+            "cue": "SreeVia"
+          },
+          {
+            "k": "Zylense",
+            "v": "Rapid Execution",
+            "style": "ok",
+            "cue": "Zylense"
+          },
+          {
+            "k": "Swecha",
+            "v": "Large Scale",
+            "style": "ok",
+            "cue": "Swecha"
+          }
+        ]
+      },
+      "lines": [
+        {
+          "say": "I won a fifteen-lakh government grant, and spent eighteen months owning work at SreeVia AI, Zylense, and Swecha.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "left_label": "Typical Assistant",
+      "right_label": "Akash's PMO Cadence",
+      "rows": [
+        {
+          "left": "Waiting for tasks",
+          "right": "Monday: Milestone Trackers & MIS",
+          "left_cue": "Monday",
+          "right_cue": "trackers"
+        },
+        {
+          "left": "Chasing departments",
+          "right": "Wednesday: Cross-Functional Unblock",
+          "left_cue": "Wednesday",
+          "right_cue": "bottlenecks"
+        },
+        {
+          "left": "Missed action items",
+          "right": "Friday: Leadership Review Closure",
+          "left_cue": "Friday",
+          "right_cue": "closure"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Milestone trackers on Monday. Cross-functional bottlenecks cleared by Wednesday. Complete leadership review closure by Friday. That's the operating cadence I run.",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "intro",
+      "logo_cue": "backbone",
+      "tagline": "Building AI Data Centers,",
+      "tagline_em": "beside Srikanth sir.",
+      "tagline_cue": "Srikanth",
+      "photos": [
+        "akash.png"
+      ],
+      "tags": [
+        {
+          "text": "Data Centers",
+          "cue": "Centers"
+        },
+        {
+          "text": "Hyderabad",
+          "cue": "Hyderabad"
+        },
+        {
+          "text": "High Urgency",
+          "highlight": true
+        }
+      ],
+      "lines": [
+        {
+          "say": "And building the backbone for India's AI Data Centers beside you, Srikanth sir? That's the mission I want to own.",
+          "seed": 48
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "logo_cue": "delivered",
+      "tagline": "Give me your messiest project.",
+      "tagline_em": "I'll get it delivered.",
+      "tagline_cue": "delivered",
+      "url": "Cognisol · Hyderabad · Akash",
+      "photo": "akash.png",
+      "lines": [
+        {
+          "say": "Give me the messiest project tracker on your desk. I'll get it delivered.",
+          "seed": 49
+        }
+      ]
+    }
+  ]
+}

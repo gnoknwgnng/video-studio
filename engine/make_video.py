@@ -16,6 +16,7 @@ sys.path.insert(0, ENGINE)
 import scenes as SC  # noqa: E402
 import sfx as FX     # noqa: E402
 import media as MEDIA  # noqa: E402
+NPX = shutil.which("npx") or "npx"
 
 norm = lambda s: re.sub(r"[^a-z0-9]", "", str(s).lower())
 LEAD, TAIL, GAP_IN, GAP_SCENE, GAP_FIRST = 0.35, 2.2, 0.32, 0.7, 1.0
@@ -220,7 +221,7 @@ def transcribe(build_dir, wav_rel):
             log(f"Groq Whisper failed ({e}); falling back to local Whisper")
     for p in ("transcript.json", os.path.join("audio", "transcript.json")):
         if os.path.exists(os.path.join(build_dir, p)): os.remove(os.path.join(build_dir, p))
-    subprocess.run(["npx", "hyperframes", "transcribe", wav_rel], cwd=build_dir, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run([NPX, "hyperframes", "transcribe", wav_rel], cwd=build_dir, check=True, stdout=subprocess.DEVNULL)
     for p in ("transcript.json", os.path.join("audio", "transcript.json")):
         f = os.path.join(build_dir, p)
         if os.path.exists(f):
@@ -493,12 +494,12 @@ def main():
     if a.no_render: return
 
     # 6. render
-    if subprocess.run(["npx", "hyperframes", "check"], cwd=build).returncode != 0:
+    if subprocess.run([NPX, "hyperframes", "check"], cwd=build).returncode != 0:
         log("WARN quality check reported issues (see above); rendering anyway")
         gs = os.environ.get("GITHUB_STEP_SUMMARY")
         if gs: open(gs, "a").write("\n> ⚠️ The layout/contrast check reported issues; the video was rendered anyway. Watch it before sharing.\n")
     out = os.path.join(vdir, "out", f"{name}.mp4")
-    subprocess.run(["npx", "hyperframes", "render", "-o", out, "--fps", os.environ.get("RENDER_FPS", "24")], cwd=build, check=True)
+    subprocess.run([NPX, "hyperframes", "render", "-o", out, "--fps", os.environ.get("RENDER_FPS", "24")], cwd=build, check=True)
     log("done ->", os.path.relpath(out, REPO))
 
 
