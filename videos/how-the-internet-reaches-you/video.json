@@ -1,0 +1,116 @@
+{
+  "company": "The Internet",
+  "url": "",
+  "language": "en",
+  "voice": "kokoro:am_michael",
+  "theme": "light",
+  "subtitles": "kinetic",
+  "music": "tech",
+  "colors": { "primary": "#2453d4", "accent": "#7cc4ff", "alert": "#ff5a36", "ink": "#0b1530", "background": "#f3f6fc" },
+  "images": {},
+  "sources": [
+    { "title": "ITU: Facts and Figures 2023", "url": "https://www.itu.int/itu-d/reports/statistics/facts-figures-2023/" },
+    { "title": "Wikipedia: Submarine communications cable", "url": "https://en.wikipedia.org/wiki/Submarine_communications_cable" }
+  ],
+  "scenes": [
+    {
+      "type": "photo",
+      "kicker": "One click",
+      "caption": "Every page you open",
+      "caption_em": "crosses the world.",
+      "image_query": "person using laptop at night",
+      "lines": [{ "say": "Every web page you open crosses the world in under a second.", "seed": 42 }]
+    },
+    {
+      "type": "flow",
+      "kicker": "The journey",
+      "title": "Where your click goes",
+      "nodes": [
+        { "label": "Your phone", "icon": "smartphone", "cue": "phone" },
+        { "label": "Wi-Fi router", "icon": "router", "cue": "router" },
+        { "label": "Internet provider", "icon": "radio-tower", "cue": "provider" },
+        { "label": "Undersea cables", "icon": "cable", "cue": "cables" },
+        { "label": "Data center", "icon": "server", "cue": "center" }
+      ],
+      "lines": [{ "say": "Your phone sends the request to your router, then to your internet provider, along undersea cables, and into a data center.", "seed": 43 }]
+    },
+    {
+      "type": "gallery",
+      "kicker": "Real places",
+      "title": "Where the internet lives",
+      "tiles": [
+        { "label": "Data centers", "icon": "server", "image_query": "data center server room", "cue": "data" },
+        { "label": "Undersea cables", "icon": "cable", "image_query": "submarine cable", "cue": "undersea" },
+        { "label": "Cell towers", "icon": "radio-tower", "image_query": "cell tower antenna", "cue": "towers" }
+      ],
+      "lines": [{ "say": "It physically lives in data centers, undersea cables, and cell towers.", "seed": 44 }]
+    },
+    {
+      "type": "chart",
+      "kind": "line",
+      "kicker": "People online",
+      "title": "From one billion to five",
+      "unit": "B",
+      "source": "ITU estimates",
+      "data": [
+        { "label": "2005", "value": 1.0, "cue": "two" },
+        { "label": "2010", "value": 2.0 },
+        { "label": "2015", "value": 3.2 },
+        { "label": "2019", "value": 4.1 },
+        { "label": "2023", "value": 5.4, "cue": "today" }
+      ],
+      "lines": [{ "say": "In two thousand five, about one billion people were online. Today, it's more than five billion.", "sub": "In 2005, about one billion people were online. Today, it's more than five billion.", "seed": 45 }]
+    },
+    {
+      "type": "map",
+      "kicker": "Biggest online populations",
+      "places": [
+        { "country": "China", "cue": "China" },
+        { "country": "India", "cue": "India" },
+        { "country": "United States", "cue": "United" }
+      ],
+      "lines": [{ "say": "The biggest online populations are in China, India, and the United States.", "seed": 46 }]
+    },
+    {
+      "type": "icons",
+      "kicker": "What it changed",
+      "title": "Everyday life, rewired",
+      "items": [
+        { "label": "Talk", "icon": "message-circle", "cue": "talk" },
+        { "label": "Work", "icon": "briefcase", "cue": "work" },
+        { "label": "Learn", "icon": "graduation-cap", "cue": "learn" },
+        { "label": "Shop", "icon": "shopping-cart", "cue": "shop" }
+      ],
+      "lines": [{ "say": "It changed how we talk, work, learn, and shop.", "seed": 47 }]
+    },
+    {
+      "type": "versus",
+      "kicker": "Then and now",
+      "left": { "label": "Dial-up", "image_query": "old computer modem", "points": ["56 kbps at best", "Blocked the phone line"], "cue": "dial" },
+      "right": { "label": "Fibre", "image_query": "fiber optic cable light", "points": ["1 Gbps and more", "Always on"], "cue": "fibre" },
+      "lines": [{ "say": "We went from dial-up modems that blocked the phone line, to fibre that's always on.", "seed": 48 }]
+    },
+    {
+      "type": "chart",
+      "kind": "donut",
+      "kicker": "How we get online",
+      "title": "Phones lead the way",
+      "center": "~6 in 10",
+      "center_label": "visits from phones",
+      "data": [
+        { "label": "Phones", "value": 60, "display": "about 60%", "cue": "six" },
+        { "label": "Computers & tablets", "value": 40, "display": "about 40%", "cue": "phones" }
+      ],
+      "lines": [{ "say": "And today, about six in every ten web visits come from phones.", "seed": 49 }]
+    },
+    {
+      "type": "end",
+      "tagline": "One click.",
+      "tagline_em": "Whole planet.",
+      "logo_cue": "internet",
+      "tagline_cue": "one",
+      "image_query": "earth at night from space city lights",
+      "lines": [{ "say": "One click, one whole planet. That's the internet.", "seed": 50 }]
+    }
+  ]
+}

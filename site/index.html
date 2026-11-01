@@ -57,7 +57,15 @@
   .steps li { list-style: none; counter-increment: s; padding-left: 34px; position: relative; font-size: 14px; }
   .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--pri); color: #fff; font: 700 12px/24px Inter; text-align: center; }
   .settings { margin-top: 18px; }
-  .hero { max-width: 760px; }
+  .hero { max-width: 820px; }
+  select { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 9px 11px; font: 14px Inter; }
+  .opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
+  .opts.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+  @media (max-width: 520px) { .opts { grid-template-columns: 1fr 1fr; } .opts.two { grid-template-columns: 1fr; } }
+  .voicerow { display: flex; gap: 8px; } .voicerow select { flex: 1; min-width: 0; }
+  .play { flex: none; width: 42px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--pri); font-size: 15px; cursor: pointer; }
+  .play:disabled { opacity: .4; cursor: default; }
+  textarea.topic { font: 18px/1.45 Inter; min-height: 90px; background: var(--bg); color: var(--ink); border-color: var(--line); padding: 14px 16px; border-radius: 14px; }
   input.big { font-size: 20px; padding: 16px 16px; border-radius: 14px; }
   .more { margin-top: 14px; }
   .runbox { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; }
@@ -74,19 +82,32 @@
   <header>
     <div>
       <h1>Video <em>Studio</em></h1>
-      <div class="repo" id="repoLine">Explainer videos, made by GitHub Actions</div>
+      <div class="repo" id="repoLine">Videos in any language, made by GitHub Actions</div>
     </div>
     <nav><button class="on" data-tab="topic">From a topic</button><button data-tab="gallery">Gallery</button><button data-tab="create">Write my own</button><button data-tab="help">How it works</button></nav>
   </header>
 
   <section class="panel on" id="topic">
     <div class="card hero">
-      <label for="t_topic">What should the video explain?</label>
-      <input type="text" id="t_topic" class="big" placeholder="e.g. How UPI payments work in India" maxlength="140" />
+      <label for="t_topic">What should the video be about?</label>
+      <textarea id="t_topic" class="topic" maxlength="1000" placeholder="Any topic, e.g. How UPI payments work in India, or paste a short announcement"></textarea>
+      <div class="opts two">
+        <div><label for="t_lang">Language</label><select id="t_lang"></select></div>
+        <div><label for="t_voice">Voice</label><div class="voicerow"><select id="t_voice"></select><button type="button" class="play" id="t_play" title="Hear this voice" aria-label="Hear this voice">▶</button></div></div>
+      </div>
+      <div class="opts">
+        <div><label for="t_format">Format</label><select id="t_format"><option value="auto">Auto (best fit)</option><option value="explainer">Explainer</option><option value="listicle">List / top N</option><option value="news">News update</option><option value="story">Story / history</option><option value="tutorial">How-to</option><option value="product">Product / company</option><option value="comparison">Comparison</option><option value="hiring">Hiring</option><option value="pitch">Personal pitch</option><option value="announcement">Announcement</option><option value="motivational">Motivational</option></select></div>
+        <div><label for="t_duration">Length</label><select id="t_duration"><option value="short">Short (20–35 s)</option><option value="standard" selected>Standard (35–55 s)</option><option value="long">Long (60–100 s)</option></select></div>
+        <div><label for="t_tone">Tone</label><select id="t_tone"><option value="">Energetic</option><option>friendly</option><option>professional</option><option>dramatic</option><option>funny</option><option>calm</option><option>inspirational</option></select></div>
+        <div><label for="t_theme">Look</label><select id="t_theme"><option value="">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+        <div><label for="t_music">Music</label><select id="t_music"><option value="">Auto</option><option>upbeat</option><option>calm</option><option>dramatic</option><option>tech</option><option>news</option><option value="none">No music</option></select></div>
+        <div><label for="t_visual">Visual style</label><select id="t_visual"><option value="">Picture-first</option><option value="no">Text-led</option></select></div>
+        <div><label for="t_subtitles">Subtitles</label><select id="t_subtitles"><option value="">Kinetic</option><option value="bold">Bold pop</option><option value="karaoke">Karaoke</option><option value="classic">Classic</option><option value="none">None</option></select></div>
+      </div>
       <details class="more">
-        <summary>Options</summary>
+        <summary>More options</summary>
         <label for="t_notes">Notes for the AI (optional)</label>
-        <input type="text" id="t_notes" placeholder="Audience, tone, facts to include, e.g. for first-time investors, friendly tone" maxlength="300" />
+        <input type="text" id="t_notes" placeholder="Audience, facts to include, call to action" maxlength="300" />
         <label for="t_logo">Logo image URL (optional)</label>
         <input type="url" id="t_logo" placeholder="https://example.com/logo.png" />
         <label for="t_token">GitHub token for one-click runs (optional)</label>
@@ -96,7 +117,7 @@
           for this repository only, with <b>Actions: Read and write</b>. It is saved only in this browser.</div>
       </details>
       <div class="row"><button class="btn" id="t_go">Make the video →</button></div>
-      <div class="status" id="t_status">The AI (Groq, gpt-oss-120b) writes the script, then GitHub Actions records the voice, animates and renders it. About 30 minutes for a new video.</div>
+      <div class="status" id="t_status">The AI researches and writes the script, then GitHub Actions records the voice, animates and renders it. About 5–10 minutes for a new video.</div>
       <div class="runbox" id="t_run" hidden><div class="dot" id="t_dot"></div><div><b id="t_rtitle">Latest run</b><div class="hint" id="t_rsub"></div></div><a class="btn ghost" id="t_rlink" href="#" target="_blank" rel="noopener">Open</a></div>
     </div>
   </section>
@@ -115,6 +136,10 @@
         <input type="text" id="company" placeholder="Acme" />
         <label for="url">Website</label>
         <input type="text" id="url" placeholder="acme.com" />
+        <div class="opts two" style="grid-template-columns:1fr 1fr"><div><label for="language">Language</label><select id="language"></select></div><div><label for="voice">Voice</label><select id="voice"></select></div></div>
+        <div class="opts"><div><label for="theme">Look</label><select id="theme"><option value="light">Light</option><option value="dark">Dark</option></select></div>
+          <div><label for="subs">Subtitles</label><select id="subs"><option value="kinetic">Kinetic</option><option value="bold">Bold</option><option value="karaoke">Karaoke</option><option value="classic">Classic</option><option value="none">None</option></select></div>
+          <div><label for="music">Music</label><select id="music"><option>upbeat</option><option>calm</option><option>dramatic</option><option>tech</option><option>news</option><option value="none">none</option></select></div></div>
         <label for="logo">Logo (image URL or file name)</label>
         <input type="text" id="logo" placeholder="https://acme.com/logo.png" />
         <div class="hint">Leave empty to show the company name as text. A file name means you upload it into the folder.</div>
@@ -147,6 +172,7 @@
           <div class="row" style="margin:0">
             <button class="btn ghost" id="starter">Starter template</button>
             <button class="btn ghost" id="example">DocsDocs example</button>
+            <button class="btn ghost" id="example2">Internet history example</button>
           </div>
         </div>
         <textarea id="scenes" spellcheck="false"></textarea>
@@ -154,7 +180,32 @@
         <details>
           <summary>Scene types and their fields</summary>
           <div class="ref">
-            <div><b>problem</b><br/>Icon storm + up to 4 pain cards that flip in on cue words.<br/><code>kicker, title, title_em, alert_word, icon (tooth, document, heart, shield, building, box, chip), meter_label, cards[{text, cue}]</code></div>
+            <div><b>photo</b><br/>One full-screen real photo with a short caption.<br/><code>kicker, caption, caption_em, image_query or photo</code></div>
+            <div><b>gallery</b><br/>2–4 photo tiles that pop in as each is named.<br/><code>title, tiles[{label, icon, image_query, cue}]</code></div>
+            <div><b>chart</b><br/>Bar, column, line, donut or pie chart built as the numbers are spoken.<br/><code>kind, title, unit, source, highlight, data[{label, value, display, icon, cue}]</code></div>
+            <div><b>flow</b><br/>A process diagram: icon nodes joined by arrows.<br/><code>title, nodes[{label, sub, icon, cue}]</code></div>
+            <div><b>icons</b><br/>3–6 big icons with short labels.<br/><code>title, items[{label, icon, cue}]</code></div>
+            <div><b>versus</b><br/>Two sides with photos and short points.<br/><code>left{label, image_query, points[], cue}, right{...}</code></div>
+            <div><b>map</b><br/>World map that zooms to the countries named, with pins.<br/><code>title, places[{country, label, value, cue}]</code></div>
+            <div><b>spotlight</b><br/>A big line-drawn icon; related icons fly in and orbit it; shakes red (problem) or glows (win). Best opener.<br/><code>kicker, title, icon, satellites[{icon, label, cue}], mood: bad|good, climax_cue, caption</code></div>
+            <div><b>pictogram</b><br/>"1 in 5" as a grid of people or icons.<br/><code>total, highlight, icon, display, label, label_em, cue</code></div>
+            <div><b>kpis</b><br/>2–4 key numbers counting up with icons.<br/><code>items[{value, prefix, suffix, label, icon, cue}]</code></div>
+            <div><b>bubbles</b><br/>Circles sized by value to compare sizes.<br/><code>items[{label, value, display, icon, cue}], unit, note</code></div>
+            <div><b>gauge</b><br/>A meter with a needle: score, rating, risk.<br/><code>value (0–100), suffix, zones[], label, label_em, cue</code></div>
+            <div><b>funnel</b><br/>Stages that narrow (visitors → buyers).<br/><code>stages[{label, value, display, icon, cue}]</code></div>
+            <div><b>cycle</b><br/>A repeating loop of 3–6 steps.<br/><code>center, nodes[{label, icon, cue}]</code></div>
+            <div><b>chat</b><br/>A phone conversation, bubble by bubble.<br/><code>name, messages[{from: me|them, text, cue}]</code> · give each line its own <code>voice</code></div>
+            <div><b>reveal</b><br/>Before/after photos with a sliding wipe.<br/><code>before{label, image_query}, after{...}, caption</code></div>
+            <div><b>video options</b><br/><code>transition</code>: wipe, flash, none · <code>progress_bar</code>: true/false · <code>background_motion</code>: true/false</div>
+            <div><b>icon</b> (any item)<br/>Any English word or one of 2,292 <a href="https://lucide.dev/icons" target="_blank" rel="noopener">Lucide icons</a>, e.g. smartphone, landmark, truck.</div>
+            <div><b>hook</b><br/>A big statement that appears word by word as it is spoken. Best opener.<br/><code>kicker, text, em, highlight</code></div>
+            <div><b>problem</b><br/>Icon storm + up to 4 pain cards that flip in on cue words.<br/><code>kicker, title, title_em, alert_word, icon (document, phone, globe, rocket, bulb, user, chart, coin, book, home, cap, chat, bolt, cloud, lock, briefcase, bag, leaf, mail, cross, heart, shield, building, box, chip, tooth), meter_label, cards[{text, cue}]</code></div>
+            <div><b>number</b><br/>One giant number that counts up on cue (or a % ring).<br/><code>kicker, value, prefix, suffix, percent, label, label_em, note, cue</code></div>
+            <div><b>timeline</b><br/>3–5 dated events lighting up on a line.<br/><code>title, events[{date, text, cue}]</code></div>
+            <div><b>list</b><br/>3–6 numbered items (tips, top N, mistakes).<br/><code>kicker, title, items[{text, note, cue}], countdown</code></div>
+            <div><b>quote</b><br/>A real quote with its author.<br/><code>text, author, role, cue</code></div>
+            <div><b>broll</b><br/>Full-screen footage or photo with a caption. Stock clips need a free Pexels/Pixabay key.<br/><code>kicker, caption, caption_em, video (file/URL) or video_query, image_query</code></div>
+            <div><b>presenter</b><br/>A person: round photo, name, role, points.<br/><code>name, role, photo, points[{text, cue}]</code></div>
             <div><b>stats</b><br/>Animated bars + "1 in N" people callout.<br/><code>label, bars[{name, value, display, cue}], callout{em, text, people, empty, cue, empty_cue}</code></div>
             <div><b>intro</b><br/>Big logo, tagline, 0–2 photos, audience tags.<br/><code>logo_cue, tagline, tagline_em, tagline_cue, photos[], tags[{text, cue, highlight}]</code></div>
             <div><b>steps</b><br/>2–4 numbered steps on a timeline with chips.<br/><code>title, steps[{title, chips[], cue}]</code></div>
@@ -162,7 +213,9 @@
             <div><b>question</b><br/>"So what makes X different?"<br/><code>pre, em, post, em_cue, mark_cue</code></div>
             <div><b>compare</b><br/>Up to 4 rows: others vs you.<br/><code>left_label, right_label, rows[{left, right, left_cue, right_cue}]</code></div>
             <div><b>end</b><br/>Optional shrinking bar chart, logo, tagline, URL.<br/><code>chart{label, bars[{label, from, to}]}, tagline, tagline_em, logo_cue, tagline_cue</code></div>
-            <div><b>lines</b> (every scene)<br/>What the voice says in that scene.<br/><code>[{say, sub, seed}]</code> · <code>say</code> is spoken, <code>sub</code> is the subtitle (defaults to say). Spell names how they sound, e.g. "Docs, Docs". Change <code>seed</code> to re-roll a line.</div>
+            <div><b>website</b><br/>The real site scrolling in a phone.<br/><code>url, kicker, title</code></div>
+            <div><b>lines</b> (every scene)<br/>What the voice says in that scene.<br/><code>[{say, sub, seed, voice, pause_after}]</code> · <code>say</code> is spoken, <code>sub</code> is the subtitle (defaults to say). Spell names how they sound, e.g. "Docs, Docs". <code>voice</code> picks a speaker from <code>"voices"</code> for dialogues. Change <code>seed</code> to re-roll a line.</div>
+            <div><b>any scene</b><br/>Optional background: <code>image_query</code> (photo search), <code>photo</code> (file/URL), <code>video</code> or <code>video_query</code> (footage).</div>
             <div><b>cue</b> words<br/>A word from that scene's lines. The animation fires the moment the voice says it.</div>
           </div>
         </details>
@@ -175,9 +228,9 @@
       <ol class="steps">
         <li><b>From a topic</b>: type a topic and press <i>Make the video</i>. The AI writes the script (saved as <code>videos/&lt;topic&gt;/video.json</code> so you can edit it later) and the workflow builds the video.</li>
         <li><b>Write my own</b>: fill in the form and script, then press <i>Create on GitHub</i>. GitHub opens with <code>videos/&lt;folder&gt;/video.json</code> filled in; press <i>Commit changes</i>.</li>
-        <li>The commit starts the <b>Make video</b> workflow in the Actions tab. It writes the voice with Chatterbox, times every animation to the spoken words, adds sound design and renders the MP4.</li>
-        <li>About 15–20 minutes for the first run of a new video (voice on CPU), then about 5 minutes when you only change visuals: voice lines are cached in the repo.</li>
-        <li>The finished MP4 appears in the <b>Gallery</b> here and under <b>Releases</b> on GitHub.</li>
+        <li>The commit starts the <b>Make video</b> workflow in the Actions tab. It records the voice (Kokoro, Microsoft Edge neural voices, Piper or Chatterbox, all free), times every animation to the spoken words, adds music and sound design and renders the MP4.</li>
+        <li>About 5–10 minutes for a new video; voice lines are cached in the repo, so re-renders after visual edits are faster.</li>
+        <li>The finished MP4, its subtitles (.srt) and a thumbnail appear in the <b>Gallery</b> here and under <b>Releases</b> on GitHub.</li>
         <li>To change a video, edit its <code>video.json</code> on GitHub and commit. To rebuild without changes: Actions → Make video → Run workflow.</li>
       </ol>
       <div class="row"><a class="btn" id="actionsLink" href="#" target="_blank" rel="noopener">Open Actions</a><a class="btn ghost" id="releasesLink" href="#" target="_blank" rel="noopener">Releases</a></div>
@@ -204,7 +257,7 @@ const STARTER = [
   { type: "end", tagline: "Less busywork.", tagline_em: "More work that matters.", logo_cue: "acme", tagline_cue: "less",
     lines: [ { say: "Less busywork. More work that matters. Acme.", seed: 47 } ] }
 ];
-const TYPES = ["problem", "stats", "intro", "steps", "flip", "question", "compare", "end"];
+const TYPES = ["spotlight", "photo", "gallery", "chart", "flow", "icons", "versus", "map", "pictogram", "kpis", "bubbles", "gauge", "funnel", "cycle", "chat", "reveal", "hook", "problem", "number", "stats", "intro", "steps", "timeline", "list", "flip", "question", "compare", "quote", "broll", "presenter", "website", "end"];
 const $ = id => document.getElementById(id);
 const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
@@ -222,7 +275,7 @@ function refreshLinks() {
   const base = R.owner && R.repo ? `https://github.com/${R.owner}/${R.repo}` : "https://github.com";
   $("actionsLink").href = base + "/actions/workflows/make-video.yml";
   $("releasesLink").href = base + "/releases";
-  $("repoLine").innerHTML = R.owner && R.repo ? `Explainer videos from <a href="${base}" target="_blank" rel="noopener">${R.owner}/${R.repo}</a>, made by GitHub Actions` : "Set your repository under <b>Write my own → Repository settings</b>";
+  $("repoLine").innerHTML = R.owner && R.repo ? `Videos in any language from <a href="${base}" target="_blank" rel="noopener">${R.owner}/${R.repo}</a>, made by GitHub Actions` : "Set your repository under <b>Write my own → Repository settings</b>";
 }
 refreshLinks();
 
@@ -239,13 +292,13 @@ async function loadGallery() {
   try {
     const res = await fetch(`https://api.github.com/repos/${R.owner}/${R.repo}/releases?per_page=60`);
     if (!res.ok) throw new Error(res.status === 404 ? "Repository not found, or it is private." : "GitHub API error " + res.status);
-    const rel = (await res.json()).map(r => ({ r, a: (r.assets || []).find(a => a.name.endsWith(".mp4")) })).filter(x => x.a);
+    const rel = (await res.json()).map(r => ({ r, a: (r.assets || []).find(a => a.name.endsWith(".mp4") && !/-(16x9|1x1|4x5)\.mp4$/.test(a.name)) || (r.assets || []).find(a => a.name.endsWith(".mp4")), srt: (r.assets || []).find(a => a.name.endsWith(".srt")), jpg: (r.assets || []).find(a => a.name.endsWith(".jpg") && !a.name.endsWith("-youtube.jpg")) })).filter(x => x.a);
     if (!rel.length) { box.innerHTML = '<div class="empty">No videos yet. Create one under <b>New video</b>; it appears here when the workflow finishes.</div>'; return; }
     box.innerHTML = "";
-    for (const { r, a } of rel) {
+    for (const { r, a, srt, jpg } of rel) {
       const d = document.createElement("div"); d.className = "card vid";
-      d.innerHTML = `<video controls preload="metadata" playsinline src="${a.browser_download_url}"></video>
-        <h3></h3><div class="meta"><span>${new Date(r.published_at).toLocaleDateString()}</span><a href="${a.browser_download_url}">Download</a></div>`;
+      d.innerHTML = `<video controls preload="metadata" playsinline src="${a.browser_download_url}"${jpg ? ` poster="${jpg.browser_download_url}"` : ""}></video>
+        <h3></h3><div class="meta"><span>${new Date(r.published_at).toLocaleDateString()}</span><span><a href="${a.browser_download_url}">Download</a>${srt ? ` · <a href="${srt.browser_download_url}">Subtitles</a>` : ""}</span></div>`;
       d.querySelector("h3").textContent = r.name || r.tag_name;
       box.appendChild(d);
     }
@@ -270,14 +323,27 @@ $("example").addEventListener("click", async () => {
     setScenes(cfg.scenes);
   } catch (e) { status("Could not load the example. Set your repository first, and make sure videos/docsdocs/video.json is pushed.", "bad"); }
 });
-["folder", "company", "url", "logo", "scenes", "c_primary", "c_accent", "c_alert", "c_ink", "c_background"].forEach(id => $(id).addEventListener("input", check));
+$("example2").addEventListener("click", async () => {
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/${R.owner || "gnoknwgnng"}/${R.repo || "video-studio"}/main/videos/internet-history/video.json`);
+    if (!res.ok) throw new Error();
+    const cfg = await res.json();
+    $("folder").value = "internet-history-copy"; $("company").value = cfg.company || ""; $("url").value = cfg.url || ""; $("logo").value = cfg.logo || "";
+    Object.entries(cfg.colors || {}).forEach(([k, v]) => { if ($("c_" + k)) $("c_" + k).value = v; });
+    if (cfg.theme) $("theme").value = cfg.theme; if (cfg.subtitles) $("subs").value = cfg.subtitles; if (cfg.music) $("music").value = cfg.music;
+    $("language").value = cfg.language || "en"; fillVoices($("language"), $("voice")); if (cfg.voice) { if (![...$("voice").options].some(o => o.value === cfg.voice)) $("voice").add(new Option(cfg.voice, cfg.voice)); $("voice").value = cfg.voice; }
+    setScenes(cfg.scenes);
+  } catch (e) { status("Could not load the example. Make sure videos/internet-history/video.json is pushed.", "bad"); }
+});
+["folder", "company", "url", "logo", "scenes", "c_primary", "c_accent", "c_alert", "c_ink", "c_background", "language", "voice", "theme", "subs", "music"].forEach(id => $(id).addEventListener("input", check));
 
 function status(msg, kind) { const s = $("status"); s.className = "status " + (kind || ""); s.innerHTML = msg; }
 
 function build() {
   const scenes = JSON.parse($("scenes").value);
   const colors = {}; ["primary", "accent", "alert", "ink", "background"].forEach(k => colors[k] = $("c_" + k).value);
-  const cfg = { company: $("company").value.trim(), url: $("url").value.trim(), colors, voice: { exaggeration: 0.6, cfg_weight: 0.45 }, scenes };
+  const cfg = { company: $("company").value.trim(), url: $("url").value.trim(), language: $("language").value || "en", voice: $("voice").value || "auto",
+    theme: $("theme").value, subtitles: $("subs").value, music: $("music").value, colors, scenes };
   if ($("logo").value.trim()) cfg.logo = $("logo").value.trim();
   return cfg;
 }
@@ -326,7 +392,31 @@ if (store.get(TOKEN_KEY)) $("t_token").value = store.get(TOKEN_KEY);
 $("t_token").addEventListener("change", () => store.set(TOKEN_KEY, $("t_token").value.trim()));
 const wfUrl = () => `https://github.com/${R.owner}/${R.repo}/actions/workflows/make-video.yml`;
 function tStatus(msg, kind) { const el = $("t_status"); el.className = "status " + (kind || ""); el.innerHTML = msg; }
-$("t_topic").addEventListener("keydown", e => { if (e.key === "Enter") $("t_go").click(); });
+$("t_topic").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("t_go").click(); } });
+function topicOptions() {
+  return ["format", "duration", "tone", "theme", "music", "subtitles", "visual"].map(k => [k, $("t_" + k).value]).filter(([, v]) => v).map(([k, v]) => `${k}=${v}`).join("; ");
+}
+// ---- languages + voices (voices/voices.json, made by engine/voice_samples.py) ----
+let CAT = { languages: [{ code: "en", name: "English" }], voices: {} }; const player = new Audio();
+function fillVoices(langSel, voiceSel) {
+  const code = langSel.value || "en", vs = CAT.voices[code] || [];
+  voiceSel.innerHTML = '<option value="female">Auto · female</option><option value="male">Auto · male</option>' + vs.map(v => `<option value="${v.id}">${v.label.replace(/</g, "&lt;")}</option>`).join("");
+}
+function sampleOf(langSel, voiceSel) {
+  const vs = CAT.voices[langSel.value || "en"] || [], val = voiceSel.value;
+  const v = val === "female" || val === "male" ? vs.find(x => x.default === val) : vs.find(x => x.id === val);
+  return v && v.sample;
+}
+fetch("voices/voices.json").then(r => r.json()).then(c => {
+  CAT = c;
+  const opts = c.languages.map(l => `<option value="${l.code}">${l.name}${l.native && l.native !== l.name ? " · " + l.native : ""}</option>`).join("");
+  $("t_lang").innerHTML = '<option value="">Detect from the topic</option>' + opts; $("language").innerHTML = opts;
+  fillVoices($("t_lang"), $("t_voice")); fillVoices($("language"), $("voice")); $("t_play").disabled = !sampleOf($("t_lang"), $("t_voice"));
+}).catch(() => {});
+$("t_lang").addEventListener("change", () => { fillVoices($("t_lang"), $("t_voice")); $("t_play").disabled = !sampleOf($("t_lang"), $("t_voice")); });
+$("t_voice").addEventListener("change", () => { $("t_play").disabled = !sampleOf($("t_lang"), $("t_voice")); });
+$("language").addEventListener("change", () => { fillVoices($("language"), $("voice")); check(); });
+$("t_play").addEventListener("click", () => { const s = sampleOf($("t_lang"), $("t_voice")); if (s) { player.pause(); player.src = s; player.play().catch(() => {}); } });
 $("t_go").addEventListener("click", async () => {
   const topic = $("t_topic").value.trim(), notes = $("t_notes").value.trim(), logo = $("t_logo").value.trim(), token = $("t_token").value.trim();
   if (topic.length < 4) { tStatus("Type a topic first, e.g. <i>How UPI payments work in India</i>.", "bad"); return; }
@@ -335,14 +425,14 @@ $("t_go").addEventListener("click", async () => {
   if (!token) {
     try { await navigator.clipboard.writeText(topic); } catch (e) {}
     window.open(wfUrl(), "_blank", "noopener");
-    tStatus(`GitHub opened. Click <b>Run workflow</b>, paste your topic into the first box (it's on your clipboard), then press the green <b>Run workflow</b>.`, "good");
+    tStatus(`GitHub opened. Click <b>Run workflow</b>, paste your topic into the first box (it's on your clipboard), set <b>Language</b> to <code>${$("t_lang").value || "(empty)"}</code>, <b>Voice</b> to <code>${$("t_voice").value}</code>${topicOptions() ? ` and <b>Options</b> to <code>${topicOptions()}</code>` : ""}, then press the green <b>Run workflow</b>.`, "good");
     watchRuns(); return;
   }
   $("t_go").disabled = true; tStatus("Starting…");
   try {
     const res = await fetch(`https://api.github.com/repos/${R.owner}/${R.repo}/actions/workflows/make-video.yml/dispatches`, {
       method: "POST", headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json" },
-      body: JSON.stringify({ ref: "main", inputs: { topic, notes, logo, video: "" } }) });
+      body: JSON.stringify({ ref: "main", inputs: { topic, notes, logo, video: "", language: $("t_lang").value, voice: $("t_voice").value, options: topicOptions() } }) });
     if (res.status === 204) { tStatus("Started. The AI is writing the script; the video follows. This page shows progress below.", "good"); watchRuns(true); }
     else if (res.status === 401 || res.status === 403) tStatus("GitHub refused the token. It needs <b>Actions: Read and write</b> on this repository.", "bad");
     else if (res.status === 404) tStatus("Workflow not found. Check owner/repo, and that the token can access this repository.", "bad");

@@ -1,0 +1,54 @@
+{
+  "company": "UPI",
+  "url": "npci.org.in",
+  "language": "hi",
+  "voice": "edge:hi-IN-SwaraNeural",
+  "voices": { "guest": "edge:hi-IN-MadhurNeural" },
+  "theme": "light",
+  "subtitles": "karaoke",
+  "music": "calm",
+  "colors": { "primary": "#5a2ca0", "accent": "#f0a030", "alert": "#e2453c", "ink": "#1a1030", "background": "#f7f4fc" },
+  "images": {},
+  "scenes": [
+    {
+      "type": "hook",
+      "kicker": "क्या आप जानते हैं?",
+      "text": "भारत हर महीने एक हज़ार करोड़ से ज़्यादा",
+      "em": "UPI पेमेंट करता है।",
+      "highlight": "हज़ार",
+      "lines": [{ "say": "भारत हर महीने एक हज़ार करोड़ से ज़्यादा UPI पेमेंट करता है।", "seed": 42 }]
+    },
+    {
+      "type": "steps",
+      "title": "UPI कैसे काम करता है",
+      "steps": [
+        { "title": "QR कोड स्कैन करें", "chips": ["कोई भी ऐप", "कोई भी बैंक"], "cue": "पहले" },
+        { "title": "रकम और पिन डालें", "chips": ["सुरक्षित", "चार या छह अंक"], "cue": "फिर" },
+        { "title": "पैसा तुरंत पहुँचा", "chips": ["सेकंडों में", "24x7"], "cue": "और" }
+      ],
+      "lines": [
+        { "say": "पहले, दुकान का QR कोड स्कैन कीजिए।", "seed": 43 },
+        { "say": "फिर रकम डालिए और अपना UPI पिन।", "seed": 44 },
+        { "say": "और पैसा सेकंडों में सीधे बैंक खाते में पहुँच जाता है।", "seed": 45 }
+      ]
+    },
+    {
+      "type": "number",
+      "kicker": "शुरुआत",
+      "value": 2016,
+      "label": "में लॉन्च हुआ,",
+      "label_em": "NPCI द्वारा",
+      "note": "नेशनल पेमेंट्स कॉर्पोरेशन ऑफ इंडिया",
+      "cue": "दो",
+      "lines": [{ "say": "दो हज़ार सोलह में NPCI ने इसे लॉन्च किया था।", "voice": "guest", "seed": 46 }]
+    },
+    {
+      "type": "end",
+      "tagline": "स्कैन करो,",
+      "tagline_em": "पे करो।",
+      "logo_cue": "UPI",
+      "tagline_cue": "स्कैन",
+      "lines": [{ "say": "स्कैन करो, पे करो। बस इतना आसान है UPI.", "seed": 47 }]
+    }
+  ]
+}

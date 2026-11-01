@@ -12,11 +12,23 @@ on:
   workflow_dispatch:
     inputs:
       topic:
-        description: "NEW VIDEO FROM A TOPIC: type a topic (AI writes the script), e.g. How UPI payments work"
+        description: "NEW VIDEO: a topic, or paste any text (job post, article, notes). The AI writes the script."
+        required: false
+        default: ""
+      language:
+        description: "Language: en, hi, hinglish, ta, te, bn, mr, es, fr, ar, zh, ja... (empty = detect)"
+        required: false
+        default: ""
+      voice:
+        description: "Voice: auto, female, male, or an id like am_michael / edge:hi-IN-MadhurNeural / piper:en_US-ryan-high"
+        required: false
+        default: "auto"
+      options:
+        description: "Optional, e.g. format=listicle; duration=short; tone=funny; theme=dark; music=calm; subtitles=bold; pace=normal"
         required: false
         default: ""
       notes:
-        description: "Optional notes for the AI: audience, tone, facts to include"
+        description: "Optional notes for the AI: audience, facts to include, call to action"
         required: false
         default: ""
       logo:
@@ -61,7 +73,7 @@ jobs:
           VIDEO: ${{ github.event.inputs.video }}
         run: |
           if [ -n "$TOPIC" ]; then
-            list=$(python3 -c "import re,sys;s=re.sub(r'[^a-z0-9]+','-',sys.argv[1].lower()).strip('-');print(s[:40].strip('-') or 'video')" "$TOPIC")
+            list=$(python3 -c "import re,sys;s=re.sub(r'[^a-z0-9]+','-',sys.argv[1].lower()).strip('-')[:40].strip('-');print(s if len(s)>=4 else 'video-'+sys.argv[2])" "$TOPIC" "${{ github.run_number }}")
             echo "videos=[\"$list\"]" >> "$GITHUB_OUTPUT"; echo "New video from topic -> videos/$list"; exit 0
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             list="$VIDEO"
@@ -89,6 +101,16 @@ jobs:
       fail-fast: false
       matrix:
         video: ${{ fromJSON(needs.plan.outputs.videos) }}
+    env:
+      VIDEO_STUDIO_CACHE: ${{ github.workspace }}/.cache/video-studio
+      HF_HOME: ${{ github.workspace }}/.cache/huggingface
+      HYPERFRAMES_NO_TELEMETRY: "1"
+      HYPERFRAMES_NO_UPDATE_CHECK: "1"
+      # optional free keys: better footage and research (everything works without them)
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      VIDEO_FORMATS: ${{ vars.VIDEO_FORMATS }}   # optional repo variable, e.g. "16:9,1:1": extra versions of every video
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -99,10 +121,29 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+      - name: Write the script with AI (topic mode)
+        if: github.event.inputs.topic != ''
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL || 'openai/gpt-oss-120b' }}
+          TOPIC: ${{ github.event.inputs.topic }}
+          NOTES: ${{ github.event.inputs.notes }}
+          LOGO: ${{ github.event.inputs.logo }}
+          LANGUAGE: ${{ github.event.inputs.language }}
+          VOICE: ${{ github.event.inputs.voice }}
+          OPTIONS: ${{ github.event.inputs.options }}
+        run: |
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "::error::Add your Groq key as a repository secret named GROQ_API_KEY (Settings -> Secrets and variables -> Actions)"; exit 1
+          fi
+          python engine/write_script.py "$TOPIC" --folder "${{ matrix.video }}" --notes "$NOTES" --logo "$LOGO" \
+            --lang "$LANGUAGE" --voice "$VOICE" --options "$OPTIONS" ${{ github.event.inputs.site_photos == 'true' && '--site-photos' || '' }}
+          echo "### Script written by AI" >> "$GITHUB_STEP_SUMMARY"
+          python -c "import json;c=json.load(open('videos/${{ matrix.video }}/video.json',encoding='utf-8'));print('Language: **'+c.get('language','en')+'**, voice: **'+str(c.get('voice'))+'**\n');print('\n'.join('- **'+s['type']+'**: '+' '.join(l.get('sub') or l['say'] for l in s['lines']) for s in c['scenes']))" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check what this video needs
+        id: needs
+        run: python engine/needs.py "videos/${{ matrix.video }}"
 
       - name: Restore FFmpeg
         id: ffmpeg
@@ -121,11 +162,20 @@ jobs:
       - name: Use FFmpeg
         run: echo "$HOME/ffmpeg-bin" >> "$GITHUB_PATH"
 
-      - name: Cache AI models (Chatterbox voice)
+      - name: Fonts for this language (fallback for the downloaded web fonts)
+        if: steps.needs.outputs.fonts != 'none'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends fonts-noto-core ${{ steps.needs.outputs.fonts == 'cjk' && 'fonts-noto-cjk' || '' }} > /dev/null
+
+      - name: Cache voice models (Kokoro, Piper, Whisper)
         uses: actions/cache@v4
         with:
-          path: ~/.cache/huggingface
-          key: hf-chatterbox-0.1.7
+          path: |
+            .cache/video-studio
+            .cache/huggingface
+          key: voice-models-v2-${{ hashFiles('requirements.txt') }}-${{ github.run_id }}
+          restore-keys: voice-models-v2-${{ hashFiles('requirements.txt') }}-
 
       - name: Cache HyperFrames Chrome
         uses: actions/cache@v4
@@ -138,17 +188,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-py${{ steps.py.outputs.python-version }}-${{ hashFiles('requirements.txt') }}-torch260cpu
+          key: venv2-${{ runner.os }}-py${{ steps.py.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
 
       - name: Install Python packages (first run only)
         if: steps.venv.outputs.cache-hit != 'true'
         run: |
           python -m venv .venv
-          .venv/bin/pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
-          .venv/bin/pip install -r requirements.txt
+          .venv/bin/pip install -q -r requirements.txt
 
       - name: Use the installed Python environment
         run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Install Chatterbox (only for videos that use it)
+        if: steps.needs.outputs.chatterbox == 'true'
+        run: |
+          pip install -q torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q -r requirements-chatterbox.txt
 
       - name: Restore installed Node packages
         id: nm
@@ -164,25 +219,9 @@ jobs:
       - name: Make sure Chrome is ready
         run: npx hyperframes browser ensure
 
-      - name: Write the script with AI (topic mode)
-        if: github.event.inputs.topic != ''
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          GROQ_MODEL: ${{ vars.GROQ_MODEL || 'openai/gpt-oss-120b' }}
-          TOPIC: ${{ github.event.inputs.topic }}
-          NOTES: ${{ github.event.inputs.notes }}
-          LOGO: ${{ github.event.inputs.logo }}
-        run: |
-          if [ -z "$GROQ_API_KEY" ]; then
-            echo "::error::Add your Groq key as a repository secret named GROQ_API_KEY (Settings -> Secrets and variables -> Actions)"; exit 1
-          fi
-          python engine/write_script.py "$TOPIC" --folder "${{ matrix.video }}" --notes "$NOTES" --logo "$LOGO" ${{ github.event.inputs.site_photos == 'true' && '--site-photos' || '' }}
-          echo "### Script written by AI" >> "$GITHUB_STEP_SUMMARY"
-          python -c "import json;c=json.load(open('videos/${{ matrix.video }}/video.json'));print('\n'.join('- **'+s['type']+'**: '+' '.join(l.get('sub') or l['say'] for l in s['lines']) for s in c['scenes']))" >> "$GITHUB_STEP_SUMMARY"
-
       - name: Make the video
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # used for fast word timing (Groq Whisper)
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # used for fast, accurate word timing (Groq Whisper)
         run: python engine/make_video.py "videos/${{ matrix.video }}"
 
       - name: Save script + voice cache to the repo
@@ -199,16 +238,34 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.video }}
-          path: videos/${{ matrix.video }}/out/${{ matrix.video }}.mp4
+          path: |
+            videos/${{ matrix.video }}/out/${{ matrix.video }}*.mp4
+            videos/${{ matrix.video }}/out/${{ matrix.video }}*.jpg
+            videos/${{ matrix.video }}/out/${{ matrix.video }}.srt
 
       - name: Publish MP4 as a Release
         env:
           GH_TOKEN: ${{ github.token }}
+          REQUESTED_BY: ${{ github.event.inputs.requested_by }}
         run: |
+          v="videos/${{ matrix.video }}"
           tag="${{ matrix.video }}-v${{ github.run_number }}"
-          echo "Made from \`videos/${{ matrix.video }}/video.json\` at ${{ github.sha }}." > notes.md
-          if [ -s "videos/${{ matrix.video }}/out/credits.md" ]; then echo "" >> notes.md; cat "videos/${{ matrix.video }}/out/credits.md" >> notes.md; fi
-          company=$(python -c "import json;print(json.load(open('videos/${{ matrix.video }}/video.json')).get('company','${{ matrix.video }}'))")
-          gh release create "$tag" "videos/${{ matrix.video }}/out/${{ matrix.video }}.mp4" \
-            --title "$company explainer (run ${{ github.run_number }})" \
-            --notes-file notes.md
+          python - "$v" > notes.md <<'PY'
+          import json, os, sys
+          v = sys.argv[1]; c = json.load(open(f"{v}/video.json", encoding="utf-8"))
+          info = json.load(open(f"{v}/out/info.json")) if os.path.exists(f"{v}/out/info.json") else {}
+          print(f"Made from `{v}/video.json`.")
+          print(f"\n**Language:** {c.get('language', 'en')} · **Voice:** {', '.join(info.get('voices', [])) or c.get('voice')} · **Length:** {info.get('duration', '?')} s")
+          if os.environ.get("REQUESTED_BY"): print(f"**Requested by:** {os.environ['REQUESTED_BY']}")
+          if c.get("sources"):
+              print("\nSources:"); [print(f"- [{s['title']}]({s['url']})") for s in c["sources"] if s.get("url")]
+          cr = f"{v}/out/credits.md"
+          if os.path.exists(cr) and os.path.getsize(cr): print("\n" + open(cr, encoding="utf-8").read())
+          PY
+          company=$(python -c "import json;print(json.load(open('$v/video.json',encoding='utf-8')).get('company','${{ matrix.video }}'))")
+          files="$v/out/${{ matrix.video }}.mp4"
+          for f in "$v/out/${{ matrix.video }}.srt" "$v/out/${{ matrix.video }}.jpg" "$v/out/${{ matrix.video }}-youtube.jpg" \
+                   "$v/out/${{ matrix.video }}-16x9.mp4" "$v/out/${{ matrix.video }}-1x1.mp4" "$v/out/${{ matrix.video }}-4x5.mp4"; do
+            [ -s "$f" ] && files="$files $f"
+          done
+          gh release create "$tag" $files --title "$company video (run ${{ github.run_number }})" --notes-file notes.md

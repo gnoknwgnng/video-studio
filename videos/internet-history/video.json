@@ -1,0 +1,88 @@
+{
+  "company": "The Internet",
+  "url": "",
+  "language": "en",
+  "voice": "kokoro:am_michael",
+  "theme": "dark",
+  "subtitles": "kinetic",
+  "music": "tech",
+  "colors": { "primary": "#4f7cff", "accent": "#7dd3fc", "alert": "#ff6b4a", "ink": "#0b1020", "background": "#0a0d16", "highlight": "#FFE600" },
+  "images": {},
+  "sources": [
+    { "title": "Wikipedia: History of the Internet", "url": "https://en.wikipedia.org/wiki/History_of_the_Internet" },
+    { "title": "Wikipedia: World Wide Web", "url": "https://en.wikipedia.org/wiki/World_Wide_Web" }
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "kicker": "Fifty years in fifty seconds",
+      "text": "The first message ever sent online",
+      "em": "crashed after two letters.",
+      "highlight": "crashed",
+      "lines": [{ "say": "The first message ever sent online crashed after two letters.", "seed": 42 }]
+    },
+    {
+      "type": "timeline",
+      "title": "How the internet happened",
+      "events": [
+        { "date": "1969", "text": "ARPANET sends “LO”", "cue": "sixty" },
+        { "date": "1983", "text": "TCP/IP becomes the standard", "cue": "eighty" },
+        { "date": "1989", "text": "The World Wide Web is proposed", "cue": "web" },
+        { "date": "1991", "text": "The web opens to everyone", "cue": "ninety" }
+      ],
+      "lines": [
+        { "say": "In nineteen sixty-nine, ARPANET tried to send the word login, and stopped at L O.", "seed": 43 },
+        { "say": "In nineteen eighty-three, every network switched to one shared language, T C P I P.", "sub": "In 1983, every network switched to one shared language, TCP/IP.", "seed": 44 },
+        { "say": "Then Tim Berners-Lee proposed the web, and by nineteen ninety-one anyone could use it.", "seed": 45 }
+      ]
+    },
+    {
+      "type": "number",
+      "kicker": "Online today",
+      "value": 5,
+      "suffix": " billion+",
+      "label": "people use the",
+      "label_em": "internet.",
+      "note": "That's about two in three people on Earth",
+      "cue": "five",
+      "image_query": "people using smartphones city",
+      "lines": [{ "say": "Today, more than five billion people are online. That's about two in every three humans.", "seed": 46 }]
+    },
+    {
+      "type": "list",
+      "kicker": "What changed",
+      "title": "Three things it rewired",
+      "items": [
+        { "text": "How we talk", "note": "Email, chat, video calls", "cue": "talk" },
+        { "text": "How we work", "note": "Remote teams, cloud tools", "cue": "work" },
+        { "text": "How we learn", "note": "Free courses, open knowledge", "cue": "learn" }
+      ],
+      "lines": [{ "say": "It rewired how we talk, how we work, and how we learn.", "seed": 47 }]
+    },
+    {
+      "type": "quote",
+      "text": "This is for everyone.",
+      "author": "Tim Berners-Lee",
+      "role": "Inventor of the World Wide Web, London 2012",
+      "cue": "Berners",
+      "lines": [{ "say": "Its inventor put it in four words. This is for everyone. Tim Berners-Lee.", "seed": 48 }]
+    },
+    {
+      "type": "broll",
+      "kicker": "Next fifty years",
+      "caption": "What will you",
+      "caption_em": "build on it?",
+      "video_query": "fiber optic cables data center",
+      "image_query": "data center servers",
+      "lines": [{ "say": "The next fifty years are being built right now. What will you build on it?", "seed": 49 }]
+    },
+    {
+      "type": "end",
+      "tagline": "Fifty years old.",
+      "tagline_em": "Still day one.",
+      "logo_cue": "internet",
+      "tagline_cue": "fifty",
+      "lines": [{ "say": "Fifty years old, and still day one. That's the internet.", "seed": 50 }]
+    }
+  ]
+}

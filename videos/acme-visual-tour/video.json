@@ -1,0 +1,280 @@
+{
+  "_comment": "Acme is a fictional example company: every figure in this video is made up to demonstrate the scene types.",
+  "company": "Acme",
+  "url": "acme.example",
+  "language": "en",
+  "voice": "kokoro:af_heart",
+  "voices": {
+    "priya": "kokoro:bf_emma",
+    "sam": "kokoro:am_puck"
+  },
+  "theme": "light",
+  "subtitles": "kinetic",
+  "music": "upbeat",
+  "transition": "wipe",
+  "cover": {
+    "kicker": "Reporting, automated",
+    "title": "Get your Fridays",
+    "em": "back."
+  },
+  "colors": {
+    "primary": "#6b3fe0",
+    "accent": "#ffb547",
+    "alert": "#ff4d6d",
+    "ink": "#16112b",
+    "background": "#f6f3ff"
+  },
+  "images": {},
+  "scenes": [
+    {
+      "type": "chat",
+      "kicker": "Friday, 6 pm",
+      "name": "Priya · Ops lead",
+      "messages": [
+        {
+          "from": "them",
+          "text": "Where is the client report?",
+          "cue": "where"
+        },
+        {
+          "from": "me",
+          "text": "Still copying numbers by hand...",
+          "cue": "still"
+        },
+        {
+          "from": "them",
+          "text": "Again? That took all of last Friday.",
+          "cue": "again"
+        },
+        {
+          "from": "me",
+          "text": "There has to be a better way.",
+          "cue": "there"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Where is the client report?",
+          "voice": "priya",
+          "seed": 42
+        },
+        {
+          "say": "Still copying numbers by hand.",
+          "voice": "sam",
+          "seed": 43
+        },
+        {
+          "say": "Again? That took all of last Friday.",
+          "voice": "priya",
+          "seed": 44
+        },
+        {
+          "say": "There has to be a better way.",
+          "voice": "sam",
+          "seed": 45
+        }
+      ]
+    },
+    {
+      "type": "pictogram",
+      "kicker": "Who we built it for",
+      "total": 10,
+      "highlight": 4,
+      "icon": "briefcase",
+      "display": "4 in 10",
+      "label": "of Acme's first customers",
+      "label_em": "were agencies.",
+      "cue": "four",
+      "lines": [
+        {
+          "say": "Four in ten of Acme's first customers were agencies drowning in reports.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "cycle",
+      "kicker": "How Acme works",
+      "title": "One weekly loop",
+      "center": "Every week",
+      "nodes": [
+        {
+          "label": "Collect",
+          "icon": "database",
+          "cue": "collects"
+        },
+        {
+          "label": "Build",
+          "icon": "file-chart-column",
+          "cue": "builds"
+        },
+        {
+          "label": "Send",
+          "icon": "send",
+          "cue": "sends"
+        },
+        {
+          "label": "Learn",
+          "icon": "lightbulb",
+          "cue": "learns"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Every week, Acme collects your data, builds the report, sends it to clients, and learns what they read.",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "funnel",
+      "kicker": "Example data",
+      "title": "From sign-up to paying",
+      "stages": [
+        {
+          "label": "Sign-ups",
+          "value": 1000,
+          "icon": "user-plus",
+          "cue": "thousand"
+        },
+        {
+          "label": "Connected tools",
+          "value": 640,
+          "icon": "plug",
+          "cue": "connected"
+        },
+        {
+          "label": "First report",
+          "value": 410,
+          "icon": "file-text",
+          "cue": "report"
+        },
+        {
+          "label": "Paying teams",
+          "value": 120,
+          "icon": "badge-check",
+          "cue": "paying"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Out of a thousand sign-ups, most connected their tools, many sent a first report, and a hundred and twenty became paying teams.",
+          "sub": "Out of 1,000 sign-ups, most connected their tools, many sent a first report, and 120 became paying teams.",
+          "seed": 48
+        }
+      ]
+    },
+    {
+      "type": "bubbles",
+      "kicker": "Time on one report",
+      "items": [
+        {
+          "label": "Before Acme",
+          "value": 6,
+          "display": "6 hours",
+          "icon": "hourglass",
+          "cue": "six"
+        },
+        {
+          "label": "With Acme",
+          "value": 1,
+          "display": "1 hour",
+          "cue": "one"
+        }
+      ],
+      "lines": [
+        {
+          "say": "One report used to take six hours. Now it takes one.",
+          "seed": 49
+        }
+      ]
+    },
+    {
+      "type": "kpis",
+      "kicker": "After three months",
+      "items": [
+        {
+          "value": 12,
+          "suffix": " hrs",
+          "label": "saved every week",
+          "icon": "clock",
+          "cue": "twelve"
+        },
+        {
+          "value": 3,
+          "suffix": "x",
+          "label": "faster reporting",
+          "icon": "zap",
+          "cue": "three"
+        },
+        {
+          "value": 98,
+          "suffix": "%",
+          "label": "reports sent on time",
+          "icon": "calendar-check",
+          "cue": "ninety"
+        }
+      ],
+      "lines": [
+        {
+          "say": "Teams saved twelve hours a week, reported three times faster, and sent ninety-eight percent of reports on time.",
+          "seed": 50
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "kicker": "Customer happiness",
+      "value": 92,
+      "suffix": "/100",
+      "zones": [
+        "Low",
+        "Okay",
+        "Great"
+      ],
+      "label": "and still",
+      "label_em": "climbing.",
+      "cue": "ninety",
+      "lines": [
+        {
+          "say": "Customer happiness? Ninety-two out of a hundred, and still climbing.",
+          "seed": 51
+        }
+      ]
+    },
+    {
+      "type": "reveal",
+      "kicker": "Same team",
+      "before": {
+        "label": "Before",
+        "image_query": "messy desk paperwork office",
+        "cue": "chaos"
+      },
+      "after": {
+        "label": "After",
+        "image_query": "clean minimal desk laptop",
+        "cue": "calm"
+      },
+      "caption": "Less chaos. More calm.",
+      "lines": [
+        {
+          "say": "Same team, less chaos, and a lot more calm.",
+          "seed": 52
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Reports on autopilot.",
+      "tagline_em": "Fridays back.",
+      "logo_cue": "Acme",
+      "tagline_cue": "reports",
+      "lines": [
+        {
+          "say": "Reports on autopilot, and your Fridays back. That's Acme.",
+          "seed": 53
+        }
+      ]
+    }
+  ]
+}

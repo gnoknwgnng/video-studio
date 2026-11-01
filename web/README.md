@@ -1,7 +1,10 @@
 # Video Studio website (Vercel)
 
-A private website with username/password login. Type a topic → it starts the GitHub
-"Make video" workflow directly → live progress → the finished video plays on the page.
+A private website with username/password login. Type a topic, pick a language and voice (with samples), format,
+length, look, music and subtitles → it starts the GitHub "Make video" workflow directly → live progress → the
+finished video plays on the page, with its subtitles (.srt) and thumbnail.
+
+The voice picker reads `web/voices/` (made by `python engine/voice_samples.py`); Vercel serves it as static files.
 
 Your GitHub token and the passwords live only in Vercel's encrypted environment variables,
 never in the browser or the repo. Passwords are stored as scrypt hashes; sessions are signed

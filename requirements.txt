@@ -1,4 +1,9 @@
-chatterbox-tts==0.1.7
+# Core (free, no API keys): Kokoro + Edge + Piper voices, local Whisper word timing, audio/image tools
+kokoro-onnx==0.6.1
+edge-tts==7.3.1
+piper-tts==1.8.0
+faster-whisper==1.2.1
+tokenizers==0.23.3          # CLIP photo matching (onnxruntime comes with kokoro-onnx)
 soundfile
 numpy
 Pillow

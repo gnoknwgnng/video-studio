@@ -1,11 +1,12 @@
-"""Free real photos and company logos for a video (no API keys needed).
+"""Real photos, stock video clips and company logos for a video.
 
-Photos:  Openverse (800M+ openly licensed images) -> Wikimedia Commons -> NASA Images
-Logos:   Wikidata/Wikimedia official logo -> Simple Icons -> the company's own website icon
-Every downloaded image is checked, resized and saved as a local file; credits are collected
-for the release notes. Anything that fails is skipped quietly and the video still renders.
+Photos:  Pexels / Pixabay (free keys, optional) -> Openverse (800M+ openly licensed images) -> Wikimedia Commons -> NASA
+Videos:  Pexels / Pixabay stock footage (free keys: PEXELS_API_KEY, PIXABAY_API_KEY)
+Logos:   the company's website -> Wikidata/Wikimedia official logo -> Simple Icons -> website icon
+Every download is checked, resized (videos: cropped to 1080x1920, cut to length, silent) and saved locally;
+credits are collected for the release notes. Anything that fails is skipped quietly and the video still renders.
 """
-import hashlib, io, json, os, re, time, urllib.error, urllib.parse, urllib.request
+import hashlib, io, json, os, re, subprocess, time, urllib.error, urllib.parse, urllib.request
 
 UA = "video-studio/1.0 (https://github.com/gnoknwgnng/video-studio; open-source explainer video maker)"
 MAX_BYTES = 12 * 1024 * 1024
@@ -15,17 +16,57 @@ STOP = {"with", "from", "that", "this", "your", "their", "into", "over", "about"
 def log(*a): print("[media]", *a, flush=True)
 
 
-def _get(url, timeout=25, accept=None):
+# time budget for searching (seconds per video), so a slow image service never stalls a render
+BUDGET = {"photo": float(os.environ.get("PHOTO_SEARCH_BUDGET", 600)), "video": float(os.environ.get("VIDEO_SEARCH_BUDGET", 300))}
+_spent = {"photo": 0.0, "video": 0.0}
+
+
+def _over(kind):
+    if _spent[kind] > BUDGET[kind]:
+        log(f"{kind} search time budget used up ({BUDGET[kind]:.0f}s); skipping further {kind} searches"); return True
+    return False
+
+
+import threading
+_host_locks = {}                 # one request at a time per API host (Wikimedia and Openverse rate-limit bursts)
+_host_fail = {}                  # consecutive failures per host; a host that keeps failing is skipped for this run
+_lk = threading.Lock()
+SERIAL_HOSTS = ("commons.wikimedia.org", "api.openverse.org", "images-api.nasa.gov", "www.wikidata.org")
+
+
+def _host(url): return urllib.parse.urlparse(url).netloc
+
+
+def source_down(url_or_host):
+    return _host_fail.get(_host(url_or_host) if "/" in url_or_host else url_or_host, 0) >= 2
+
+
+def _get(url, timeout=15, accept=None):
     headers = {"User-Agent": UA}
     if accept: headers["Accept"] = accept
-    for attempt in range(3):
+    host = _host(url)
+    if _host_fail.get(host, 0) >= 2: raise RuntimeError(f"{host} skipped after repeated failures")
+    with _lk: lock = _host_locks.setdefault(host, threading.Lock()) if host in SERIAL_HOSTS else None
+    for attempt in range(4):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=timeout) as r:
-                data = r.read(MAX_BYTES + 1)
-                if len(data) > MAX_BYTES: raise ValueError("file too large")
-                return data, r.headers.get("Content-Type", "")
+            if lock: lock.acquire()
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=timeout) as r:
+                    data = r.read(MAX_BYTES + 1)
+            finally:
+                if lock: time.sleep(0.25); lock.release()
+            if len(data) > MAX_BYTES: raise ValueError("file too large")
+            _host_fail[host] = 0
+            return data, r.headers.get("Content-Type", "")
         except urllib.error.HTTPError as e:
-            if e.code in (429, 500, 502, 503) and attempt < 2: time.sleep(3 * (attempt + 1)); continue
+            if e.code in (429, 500, 502, 503) and attempt < 3:
+                ra = e.headers.get("Retry-After", "") if e.headers else ""
+                time.sleep(min(20, float(ra)) if ra.replace(".", "").isdigit() else 3 * (attempt + 1)); continue
+            raise
+        except (TimeoutError, urllib.error.URLError, OSError) as e:
+            if host in SERIAL_HOSTS:
+                _host_fail[host] = _host_fail.get(host, 0) + 1
+                if _host_fail[host] >= 2: log(f"{host} is not responding; skipping it for the rest of this video")
             raise
 
 
@@ -71,7 +112,7 @@ def openverse(query, aspect=None, n=8):
 
 def wikimedia(query, n=8):
     q = {"action": "query", "format": "json", "generator": "search", "gsrsearch": f"{query} filetype:bitmap",
-         "gsrnamespace": 6, "gsrlimit": n, "prop": "imageinfo", "iiprop": "url|size|extmetadata", "iiurlwidth": 1600}
+         "gsrnamespace": 6, "gsrlimit": n, "prop": "imageinfo", "iiprop": "url|size|extmetadata", "iiurlwidth": 1280}
     d = _json("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(q))
     out = []
     for p in sorted(d.get("query", {}).get("pages", {}).values(), key=lambda p: p.get("index", 0)):
@@ -98,32 +139,157 @@ def nasa(query, n=5):
     return out
 
 
-def find_photo(query, out_dir, used, credits, aspect=None):
-    """Try each source in order and return a saved local file name, or None."""
-    short = " ".join([w for w in query.split() if w.lower() not in STOP and len(w) > 2][:2]) or query
-    sources = [("Openverse", lambda: openverse(query, aspect), 2), ("Openverse", lambda: openverse(query), 2),
-               ("Wikimedia", lambda: wikimedia(query), 2), ("Openverse", lambda: openverse(short), 1),
-               ("Wikimedia", lambda: wikimedia(short), 1)]
-    if re.search(r"\b(space|planet|nasa|moon|mars|rocket|satellite|galaxy|earth)\b", query, re.I):
-        sources.insert(0, ("NASA", lambda: nasa(query), 1))
-    for name, fn, need in sources:
+def pexels_photos(query, aspect=None, n=10):
+    key = os.environ.get("PEXELS_API_KEY")
+    if not key: return []
+    q = {"query": query, "per_page": n, "orientation": {"tall": "portrait", "wide": "landscape"}.get(aspect, "portrait")}
+    req = urllib.request.Request("https://api.pexels.com/v1/search?" + urllib.parse.urlencode(q), headers={"Authorization": key, "User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=25) as r: d = json.load(r)
+    return [{"url": p["src"].get("large2x") or p["src"]["original"], "title": p.get("alt") or query, "creator": p.get("photographer", "unknown"),
+             "license": "Pexels License", "page": p.get("url", ""), "trusted": True} for p in d.get("photos", [])]
+
+
+def pixabay_photos(query, aspect=None, n=10):
+    key = os.environ.get("PIXABAY_API_KEY")
+    if not key: return []
+    q = {"key": key, "q": query[:100], "image_type": "photo", "safesearch": "true", "per_page": n,
+         "orientation": {"tall": "vertical", "wide": "horizontal"}.get(aspect, "all")}
+    d = _json("https://pixabay.com/api/?" + urllib.parse.urlencode(q))
+    return [{"url": h.get("largeImageURL") or h.get("webformatURL"), "title": h.get("tags", query), "creator": h.get("user", "unknown"),
+             "license": "Pixabay Content License", "page": h.get("pageURL", ""), "trusted": True} for h in d.get("hits", [])]
+
+
+# ------------------------------------------------------------------ stock video (b-roll)
+def pexels_videos(query, n=10):
+    key = os.environ.get("PEXELS_API_KEY")
+    if not key: return []
+    req = urllib.request.Request("https://api.pexels.com/videos/search?" + urllib.parse.urlencode({"query": query, "per_page": n, "orientation": "portrait"}),
+                                 headers={"Authorization": key, "User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=25) as r: d = json.load(r)
+    out = []
+    for v in d.get("videos", []):
+        files = [f for f in v.get("video_files", []) if f.get("link") and (f.get("height") or 0) >= 960]
+        if not files: continue
+        files.sort(key=lambda f: (abs((f.get("height") or 0) - 1920), -(f.get("width") or 0) / max(1, f.get("height") or 1)))
+        out.append({"url": files[0]["link"], "duration": v.get("duration", 0), "creator": (v.get("user") or {}).get("name", "unknown"),
+                    "license": "Pexels License", "page": v.get("url", ""), "title": query, "portrait": files[0]["height"] > files[0]["width"]})
+    return out
+
+
+def pixabay_videos(query, n=10):
+    key = os.environ.get("PIXABAY_API_KEY")
+    if not key: return []
+    d = _json("https://pixabay.com/api/videos/?" + urllib.parse.urlencode({"key": key, "q": query[:100], "safesearch": "true", "per_page": n}))
+    out = []
+    for h in d.get("hits", []):
+        vs = h.get("videos", {})
+        f = next((vs[k] for k in ("large", "medium", "small") if vs.get(k, {}).get("url") and vs[k].get("height", 0) >= 720), None)
+        if not f: continue
+        out.append({"url": f["url"], "duration": h.get("duration", 0), "creator": h.get("user", "unknown"), "license": "Pixabay Content License",
+                    "page": h.get("pageURL", ""), "title": h.get("tags", query), "portrait": f["height"] > f["width"]})
+    return out
+
+
+def prepare_video(src, dst, duration, w=1080, h=1920):
+    """Crop/scale to the frame, loop if too short, cut to length, drop the audio, H.264 at 30 fps."""
+    vf = f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,fps=30"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-stream_loop", "-1", "-i", src, "-t", f"{max(1.0, duration + 0.5):.2f}", "-vf", vf, "-an",
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart", dst],
+                   check=True, timeout=300)
+    return dst
+
+
+def find_video(query, out_dir, used, credits, duration):
+    """Stock clip for `query`, prepared for a scene of `duration` seconds. Returns a local file name or None."""
+    if not (os.environ.get("PEXELS_API_KEY") or os.environ.get("PIXABAY_API_KEY")) or _over("video"): return None
+    t0 = time.time()
+    try: return _find_video(query, out_dir, used, credits, duration)
+    finally: _spent["video"] += time.time() - t0
+
+
+def _find_video(query, out_dir, used, credits, duration):
+    for name, fn in (("Pexels", lambda: pexels_videos(query)), ("Pixabay", lambda: pixabay_videos(query))):
         try: cands = fn()
         except Exception as e:
+            log(f"{name} video search failed for '{query}': {e}"); continue
+        cands.sort(key=lambda c: (not c["portrait"], c["duration"] < duration, abs(c["duration"] - max(6, duration))))
+        for c in cands[:4]:
+            if c["url"] in used: continue
+            stem = "vid_" + hashlib.sha1(c["url"].encode()).hexdigest()[:10]
+            raw, fn_out = os.path.join(out_dir, stem + "_src.mp4"), stem + ".mp4"
+            try:
+                req = urllib.request.Request(c["url"], headers={"User-Agent": UA})
+                with urllib.request.urlopen(req, timeout=90) as r, open(raw, "wb") as f:
+                    while True:
+                        b = r.read(1 << 20)
+                        if not b: break
+                        f.write(b)
+                        if f.tell() > 150 * 1024 * 1024: raise ValueError("clip too large")
+                prepare_video(raw, os.path.join(out_dir, fn_out), duration)
+            except Exception as e:
+                log(f"{name} clip failed: {e}"); continue
+            finally:
+                if os.path.exists(raw): os.remove(raw)
+            used.add(c["url"])
+            credits.append(f'- Video "{c["title"][:60]}" by {c["creator"]} ({c["license"]}), via {name}: {c["page"]}')
+            log(f"video for '{query}': {name}")
+            return fn_out
+    log(f"no stock video found for '{query}'")
+    return None
+
+
+def find_photo(query, out_dir, used, credits, aspect=None):
+    """Try each source in order and return a saved local file name, or None (within the time budget)."""
+    if not query or _over("photo"): return None
+    t0 = time.time()
+    try: return _find_photo(query, out_dir, used, credits, aspect)
+    finally: _spent["photo"] += time.time() - t0
+
+
+def _sources(query, aspect):
+    kw = [w for w in query.split() if w.lower() not in STOP and len(w) > 2]
+    short = " ".join(kw[:2]) or query
+    last = " ".join(kw[-2:]) if len(kw) > 2 else ""
+    src = [("Pexels", lambda: pexels_photos(query, aspect), 0), ("Pixabay", lambda: pixabay_photos(query, aspect), 0),
+           ("Openverse", lambda: openverse(query, aspect), 2), ("Openverse", lambda: openverse(query), 2),
+           ("Wikimedia", lambda: wikimedia(query), 2), ("Openverse", lambda: openverse(short), 1), ("Wikimedia", lambda: wikimedia(short), 1)]
+    if last and last != short: src.append(("Wikimedia", lambda: wikimedia(last), 1))
+    if re.search(r"\b(space|planet|nasa|moon|mars|rocket|satellite|galaxy|earth)\b", query, re.I):
+        src.insert(0, ("NASA", lambda: nasa(query), 1))
+    return src
+
+
+def _relevant(name, cands, query, need):
+    """Open archives: keep results whose title/tags mention words of the search (stock sites search well already)."""
+    if name in ("Pexels", "Pixabay"): return cands
+    words = [w for w in re.findall(r"[a-z]+", query.lower()) if len(w) > 3 and w not in STOP]
+    def score(c):
+        text = (c.get("title", "") + " " + c.get("tags", "")).lower()
+        return sum(1 for w in words if w in text or (w.endswith("s") and w[:-1] in text))
+    need = min(need, len(words))
+    return sorted([c for c in cands if not words or score(c) >= need], key=score, reverse=True)
+
+
+def _download(c, out_dir):
+    data, ctype = _get(c["url"])
+    return _save_image(data, ctype, out_dir, "ph_" + hashlib.sha1(c["url"].encode()).hexdigest()[:10])
+
+
+def _find_photo(query, out_dir, used, credits, aspect=None):
+    import clip_rank
+    if clip_rank.available():
+        try: return _find_photo_ranked(query, out_dir, used, credits, aspect, clip_rank)
+        except Exception as e: log(f"photo ranking unavailable ({str(e)[:100]}); using the first good result")
+    t_start = time.time()
+    for name, fn, need in _sources(query, aspect):
+        if _spent["photo"] + (time.time() - t_start) > BUDGET["photo"]: break
+        try: cands = _relevant(name, fn(), query, need)
+        except Exception as e:
             log(f"{name} search failed for '{query}': {e}"); continue
-        # relevance check: the photo's title/tags must mention at least one real word from the search
-        words = [w for w in re.findall(r"[a-z]+", query.lower()) if len(w) > 3 and w not in STOP]
-        def score(c):
-            text = (c.get("title", "") + " " + c.get("tags", "")).lower()
-            return sum(1 for w in words if w in text or (w.endswith("s") and w[:-1] in text))
-        need = min(need, len(words))   # 2 matching words for full searches, 1 for the short fallback
-        cands = sorted([c for c in cands if not words or score(c) >= need], key=score, reverse=True)
         for c in cands:
             if c["url"] in used: continue
-            try:
-                data, ctype = _get(c["url"])
-                saved = _save_image(data, ctype, out_dir, "ph_" + hashlib.sha1(c["url"].encode()).hexdigest()[:10])
-            except Exception:
-                continue
+            try: saved = _download(c, out_dir)
+            except Exception: continue
             if saved:
                 used.add(c["url"])
                 credits.append(f'- "{c["title"][:70]}" by {c["creator"]} ({c["license"]}), via {name}: {c["page"]}')
@@ -131,6 +297,54 @@ def find_photo(query, out_dir, used, credits, aspect=None):
                 return saved
     log(f"no photo found for '{query}'")
     return None
+
+
+def _find_photo_ranked(query, out_dir, used, credits, aspect, clip_rank, want=8):
+    """Collect up to `want` candidates from all sources, let CLIP pick the one that matches the words best."""
+    t_start = time.time(); pool, seen = [], set()
+    cap = float(os.environ.get("PHOTO_QUERY_BUDGET", 40))
+    for name, fn, need in _sources(query, aspect):
+        el = time.time() - t_start
+        if len(pool) >= want or _spent["photo"] + el > BUDGET["photo"] or (el > cap and pool) or el > cap * 1.5: break
+        if name in ("Pexels", "Pixabay") and pool: continue        # one stock site is plenty
+        try: cands = _relevant(name, fn(), query, max(1, need - 1))
+        except Exception as e:
+            log(f"{name} search failed for '{query}': {e}"); continue
+        for c in cands[:want - len(pool)]:
+            if c["url"] in used or c["url"] in seen: continue
+            seen.add(c["url"]); pool.append((name, c))
+    def fetch(item):
+        try:
+            f = _download(item[1], out_dir)
+            return (item[0], item[1], f) if f and not f.endswith(".svg") else None
+        except Exception:
+            return None
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        files = [r for r in ex.map(fetch, pool) if r]
+    if not files:
+        log(f"no photo found for '{query}'"); return None
+    sc = clip_rank.scores(query, [os.path.join(out_dir, f) for _, _, f in files])
+    if aspect:   # small bonus for the right shape (tall for full-screen scenes)
+        from PIL import Image
+        for k, (_, _, f) in enumerate(files):
+            w, h = Image.open(os.path.join(out_dir, f)).size
+            if (aspect == "tall") == (h > w): sc[k] += 0.008
+    order = sorted(range(len(files)), key=lambda k: -sc[k])
+    best = order[0]
+    for k in order[1:]:   # remove the losers
+        if files[k][2] != files[best][2]:
+            try: os.remove(os.path.join(out_dir, files[k][2]))
+            except OSError: pass
+    name, c, f = files[best]
+    if sc[best] < clip_rank.MIN_SCORE:
+        os.remove(os.path.join(out_dir, f))
+        log(f"no photo matched '{query}' well enough (best {sc[best]:.2f} of {len(files)}); showing an icon instead")
+        return None
+    used.add(c["url"])
+    credits.append(f'- "{c["title"][:70]}" by {c["creator"]} ({c["license"]}), via {name}: {c["page"]}')
+    log(f"photo for '{query}': {name} (match {sc[best]:.2f}, best of {len(files)})")
+    return f
 
 
 # ------------------------------------------------------------------ the company's own website
@@ -343,6 +557,7 @@ def enrich(cfg, media_dir):
             qs = s.get("image_queries") or ([q] if q else [])
             mine = [site.pop(0) for _ in range(min(2, len(site)))]
             s["photos"] = mine + [p for p in (find_photo(x, media_dir, used, credits, "wide") for x in qs[:2 - len(mine)]) if p]
-        elif s["type"] in ("problem", "end", "question", "steps") and (q or site) and not s.get("photo"):
+        elif s["type"] in ("problem", "end", "question", "steps", "hook", "number", "quote") and (q or site) and not s.get("photo") \
+                and not s.get("video"):
             s["photo"] = site.pop(0) if site else find_photo(q, media_dir, used, credits, "tall")
     return credits

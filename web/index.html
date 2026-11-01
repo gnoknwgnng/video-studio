@@ -20,6 +20,13 @@
   .who { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--dim); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
   label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 14px 0 6px; }
+  select { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 15px Inter; }
+  .opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
+  .opts.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+  @media (max-width: 520px) { .opts { grid-template-columns: 1fr 1fr; } .opts.two { grid-template-columns: 1fr; } }
+  .voicerow { display: flex; gap: 8px; } .voicerow select { flex: 1; min-width: 0; }
+  .play { flex: none; width: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--soft); color: var(--pri); font-size: 16px; cursor: pointer; }
+  .play:disabled { opacity: .4; cursor: default; }
   input[type=text], input[type=url], input[type=password], textarea { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 11px 13px; font: 15px Inter; box-sizing: border-box; }
   input:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--pri); outline-offset: 2px; }
   input.big, textarea.big { font-size: 16px; padding: 14px 16px; border-radius: 14px; min-height: 85px; resize: vertical; line-height: 1.45; }
@@ -91,19 +98,38 @@
     <div class="grid2">
       <form class="card" id="makeForm">
         <h2>New video</h2>
-        <label for="topic">What should the video explain?</label>
-        <textarea id="topic" class="big" rows="3" maxlength="4000" placeholder="Type a topic (e.g. Why Amazon won) or paste any full job post, announcement, flyer..." required></textarea>
+        <label for="topic">What should the video be about?</label>
+        <textarea id="topic" class="big" rows="3" maxlength="4000" placeholder="Any topic (e.g. Why Amazon won, UPI kaise kaam karta hai) or paste a job post, article, announcement, notes..." required></textarea>
+        <div class="opts two">
+          <div><label for="lang">Language</label><select id="lang"></select></div>
+          <div><label for="voice">Voice</label><div class="voicerow"><select id="voice"></select><button type="button" class="play" id="playBtn" title="Hear this voice" aria-label="Hear this voice">▶</button></div></div>
+        </div>
+        <div class="opts">
+          <div><label for="format">Format</label><select id="format">
+            <option value="auto">Auto (best fit)</option><option value="explainer">Explainer</option><option value="listicle">List / top N</option>
+            <option value="news">News update</option><option value="story">Story / history</option><option value="tutorial">How-to</option>
+            <option value="product">Product / company</option><option value="comparison">Comparison</option><option value="hiring">Hiring</option>
+            <option value="pitch">Personal pitch</option><option value="announcement">Announcement</option><option value="motivational">Motivational</option></select></div>
+          <div><label for="duration">Length</label><select id="duration"><option value="short">Short (20–35 s)</option><option value="standard" selected>Standard (35–55 s)</option><option value="long">Long (60–100 s)</option></select></div>
+          <div><label for="tone">Tone</label><select id="tone"><option value="">Energetic</option><option>friendly</option><option>professional</option><option>dramatic</option><option>funny</option><option>calm</option><option>inspirational</option><option>authoritative</option><option>casual</option></select></div>
+          <div><label for="theme">Look</label><select id="theme"><option value="">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+          <div><label for="music">Music</label><select id="music"><option value="">Auto</option><option>upbeat</option><option>calm</option><option>dramatic</option><option>tech</option><option>news</option><option value="none">No music</option></select></div>
+          <div><label for="subtitles">Subtitles</label><select id="subtitles"><option value="">Kinetic (1–3 words)</option><option value="bold">Bold pop</option><option value="karaoke">Karaoke line</option><option value="classic">Classic</option><option value="none">None</option></select></div>
+        </div>
         <details>
-          <summary>Options</summary>
+          <summary>More options</summary>
           <label for="notes">Notes for the AI (optional)</label>
-          <textarea id="notes" rows="2" maxlength="4000" placeholder="Audience, tone, or specific facts to emphasize"></textarea>
+          <textarea id="notes" rows="2" maxlength="4000" placeholder="Audience, facts to include, call to action, words to avoid"></textarea>
           <label for="logo">Logo image link (optional)</label>
           <input type="url" id="logo" placeholder="https://example.com/logo.png" />
+          <div class="opts two"><div><label for="pace">Pace</label><select id="pace"><option value="">Fast (Reels)</option><option value="normal">Normal</option><option value="relaxed">Relaxed</option></select></div>
+            <div><label for="visual">Visual style</label><select id="visual"><option value="">Picture-first (photos, charts, diagrams)</option><option value="no">Text-led (classic)</option></select></div></div>
+          <div class="check"><input type="checkbox" id="research" checked /><label for="research" style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink)">Research the topic first <span class="hint" style="display:block;margin:2px 0 0">Wikipedia, plus web search if a Tavily key is set. Sources go in the release notes.</span></label></div>
           <div class="check"><input type="checkbox" id="sitePhotos" /><label for="sitePhotos" style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink)">Use photos from the company's own website <span class="hint" style="display:block;margin:2px 0 0">Only if you have permission to use them.</span></label></div>
         </details>
         <div class="row"><button class="btn" id="makeBtn" type="submit">Make the video →</button></div>
         <div class="msg" id="makeMsg" role="status"></div>
-        <div class="hint">The AI writes the script, then the voice, animation and rendering run on GitHub. A new video takes about 6–9 minutes and appears below when it's ready.</div>
+        <div class="hint">The AI researches and writes the script, then the voice, animation and rendering run on GitHub. A new video takes about 5–10 minutes and appears below with its subtitles (.srt) and thumbnail.</div>
       </form>
 
       <div class="card">
@@ -156,12 +182,39 @@ $("makeForm").addEventListener("submit", async (e) => {
   if (topic.length < 4) { msg($("makeMsg"), "Type a topic first.", "bad"); return; }
   $("makeBtn").disabled = true; msg($("makeMsg"), "Starting…");
   try {
-    await api("make", { topic, notes: $("notes").value.trim(), logo: $("logo").value.trim(), site_photos: $("sitePhotos").checked });
+    const v = (id) => $(id).value;
+    await api("make", { topic, notes: $("notes").value.trim(), logo: $("logo").value.trim(), site_photos: $("sitePhotos").checked,
+      language: v("lang"), voice: v("voice"), format: v("format"), duration: v("duration"), tone: v("tone"), theme: v("theme"),
+      music: v("music"), subtitles: v("subtitles"), pace: v("pace"), visual: v("visual") !== "no", research: $("research").checked });
     msg($("makeMsg"), "Started! Follow the progress on the right.", "good");
     $("topic").value = ""; setTimeout(loadRuns, 2500);
   } catch (err) { msg($("makeMsg"), err.message, "bad"); }
   $("makeBtn").disabled = false;
 });
+
+// ---------- language + voice picker (voices/voices.json, made by engine/voice_samples.py) ----------
+let CAT = null; const audio = new Audio();
+async function loadVoices() {
+  try { CAT = await (await fetch("voices/voices.json")).json(); } catch { CAT = { languages: [{ code: "en", name: "English" }], voices: {} }; }
+  $("lang").innerHTML = '<option value="">Detect from the topic</option>' + CAT.languages.map((l) =>
+    `<option value="${esc(l.code)}">${esc(l.name)}${l.native && l.native !== l.name ? " · " + esc(l.native) : ""}</option>`).join("");
+  fillVoices();
+}
+function fillVoices() {
+  const code = $("lang").value || "en", vs = (CAT && CAT.voices[code]) || [];
+  $("voice").innerHTML = '<option value="female">Auto · female</option><option value="male">Auto · male</option>' +
+    vs.map((v) => `<option value="${esc(v.id)}" data-sample="${esc(v.sample || "")}">${esc(v.label)}</option>`).join("");
+  syncPlay();
+}
+function currentSample() {
+  const code = $("lang").value || "en", vs = (CAT && CAT.voices[code]) || [], val = $("voice").value;
+  const v = val === "female" || val === "male" ? vs.find((x) => x.default === val) : vs.find((x) => x.id === val);
+  return v && v.sample;
+}
+function syncPlay() { $("playBtn").disabled = !currentSample(); }
+$("lang").addEventListener("change", fillVoices);
+$("voice").addEventListener("change", syncPlay);
+$("playBtn").addEventListener("click", () => { const s = currentSample(); if (!s) return; audio.pause(); audio.src = s; audio.play().catch(() => {}); });
 
 // ---------- progress ----------
 async function loadRuns() {
@@ -191,9 +244,10 @@ async function loadVideos() {
   try {
     const { videos } = await api("videos");
     $("gallery").innerHTML = videos.length ? videos.map((v) => `<div class="card vid">
-        <video controls preload="metadata" playsinline src="${esc(v.url)}#t=2"></video>
+        <video controls preload="metadata" playsinline src="${esc(v.url)}#t=2"${v.poster ? ` poster="${esc(v.poster)}"` : ""}></video>
         <h3>${esc(v.title)}</h3>
-        <div class="meta"><span>${ago(v.date)}</span><a href="${esc(v.url)}" download>Download</a></div>
+        <div class="meta"><span>${ago(v.date)}</span><span><a href="${esc(v.url)}" download>Download</a>${v.srt ? ` · <a href="${esc(v.srt)}" download>Subtitles</a>` : ""}</span></div>
+        ${(v.extra && v.extra.length) || v.youtube ? `<div class="meta" style="margin-top:4px"><span>Also:</span><span>${(v.extra || []).map((x) => `<a href="${esc(x.url)}" download>${esc(x.label)}</a>`).join(" · ")}${v.youtube ? `${v.extra && v.extra.length ? " · " : ""}<a href="${esc(v.youtube)}" download>Thumbnail</a>` : ""}</span></div>` : ""}
         ${v.credits.length ? `<details><summary style="font-size:13px">Image credits</summary><div class="hint">${v.credits.map(esc).join("<br/>")}</div></details>` : ""}
       </div>`).join("") : '<div class="empty">No finished videos yet.</div>';
   } catch (err) { if (err.message !== "Please log in.") $("gallery").innerHTML = `<div class="empty">${esc(err.message)}</div>`; }
@@ -202,6 +256,7 @@ $("refreshBtn").addEventListener("click", () => { loadRuns(); loadVideos(); });
 document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("appView").hidden) loadRuns(); });
 
 // ---------- start ----------
+loadVoices();
 api("me").then((d) => d.user ? showApp(d.user) : showLogin()).catch(showLogin);
 </script>
 </body>
