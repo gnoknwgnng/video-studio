@@ -24,17 +24,18 @@ on:
         required: false
         default: "auto"
       options:
-        description: "Optional, e.g. format=listicle; duration=short; tone=funny; theme=dark; music=calm; subtitles=bold; pace=normal"
+        description: "Optional, e.g. format=listicle; duration=short; tone=funny; theme=dark; music=calm; subtitles=bold; voice_quality=fast; logo=https://..."
         required: false
         default: ""
       notes:
         description: "Optional notes for the AI: audience, facts to include, call to action"
         required: false
         default: ""
-      logo:
-        description: "Optional logo image URL (https://...)"
-        required: false
-        default: ""
+      background_music:
+        description: "Background music under the voice (the voice always stays on top)"
+        type: choice
+        options: ["soft", "medium", "loud", "off"]
+        default: "soft"
       site_photos:
         description: "Use photos from the company's own website (only if you have permission)"
         type: boolean
@@ -131,19 +132,26 @@ jobs:
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GROQ_MODEL: ${{ vars.GROQ_MODEL || 'openai/gpt-oss-120b' }}
+          SCRIPT_DRAFTS: ${{ vars.SCRIPT_DRAFTS || '2' }}
           TOPIC: ${{ github.event.inputs.topic }}
           NOTES: ${{ github.event.inputs.notes }}
-          LOGO: ${{ github.event.inputs.logo }}
           LANGUAGE: ${{ github.event.inputs.language }}
           VOICE: ${{ github.event.inputs.voice }}
           OPTIONS: ${{ github.event.inputs.options }}
+          MUSIC: ${{ github.event.inputs.background_music }}
         run: |
+          case "$MUSIC" in off) OPTIONS="$OPTIONS; music=none";; medium) OPTIONS="$OPTIONS; music_volume=medium";;
+                           loud) OPTIONS="$OPTIONS; music_volume=high";; *) OPTIONS="$OPTIONS; music_volume=low";; esac
           if [ -z "$GROQ_API_KEY" ]; then
             echo "::error::Add your Groq key as a repository secret named GROQ_API_KEY (Settings -> Secrets and variables -> Actions)"; exit 1
           fi
-          python engine/write_script.py "$TOPIC" --folder "${{ matrix.video }}" --notes "$NOTES" --logo "$LOGO" \
+          python engine/write_script.py "$TOPIC" --folder "${{ matrix.video }}" --notes "$NOTES" \
             --lang "$LANGUAGE" --voice "$VOICE" --options "$OPTIONS" ${{ github.event.inputs.site_photos == 'true' && '--site-photos' || '' }}
-          echo "### Script written by AI" >> "$GITHUB_STEP_SUMMARY"
+          echo "### The script (researched, fact-checked)" >> "$GITHUB_STEP_SUMMARY"
+          [ -f "videos/${{ matrix.video }}/script.txt" ] && sed 's/^/> /' "videos/${{ matrix.video }}/script.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Research notes and sources: \`videos/${{ matrix.video }}/research.md\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Scenes" >> "$GITHUB_STEP_SUMMARY"
           python -c "import json;c=json.load(open('videos/${{ matrix.video }}/video.json',encoding='utf-8'));print('Language: **'+c.get('language','en')+'**, voice: **'+str(c.get('voice'))+'**\n');print('\n'.join('- **'+s['type']+'**: '+' '.join(l.get('sub') or l['say'] for l in s['lines']) for s in c['scenes']))" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upgrade the script to picture-first (AI)
@@ -183,14 +191,18 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends fonts-noto-core ${{ steps.needs.outputs.fonts == 'cjk' && 'fonts-noto-cjk' || '' }} > /dev/null
 
-      - name: Cache voice models (Kokoro, Piper, Whisper)
+      - name: Cache voice, photo and music models (Kokoro, Piper, Whisper, 2.5D, music)
         uses: actions/cache@v4
         with:
-          path: |
-            .cache/video-studio
-            .cache/huggingface
-          key: voice-models-v2-${{ hashFiles('requirements.txt') }}-${{ github.run_id }}
-          restore-keys: voice-models-v2-${{ hashFiles('requirements.txt') }}-
+          path: .cache/video-studio
+          key: voice-models-v3-${{ hashFiles('requirements.txt') }}-${{ github.run_id }}
+          restore-keys: voice-models-v3-${{ hashFiles('requirements.txt') }}-
+
+      - name: Cache Chatterbox voice models (one set per language, downloaded once)
+        uses: actions/cache@v4
+        with:
+          path: .cache/huggingface
+          key: hf-models-v1-${{ steps.needs.outputs.language }}
 
       - name: Cache HyperFrames Chrome
         uses: actions/cache@v4
@@ -203,21 +215,27 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv2-${{ runner.os }}-py${{ steps.py.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
+          key: venv3-${{ runner.os }}-py${{ steps.py.outputs.python-version }}-${{ hashFiles('requirements.txt', 'requirements-chatterbox.txt') }}
 
       - name: Install Python packages (first run only)
         if: steps.venv.outputs.cache-hit != 'true'
         run: |
           python -m venv .venv
           .venv/bin/pip install -q -r requirements.txt
+          # Chatterbox (human-sounding voices) is the default for English and Hindi: install it once, into the cached env
+          .venv/bin/pip install -q torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          .venv/bin/pip install -q --no-deps chatterbox-tts==0.1.7
+          .venv/bin/pip install -q -r requirements-chatterbox.txt
 
       - name: Use the installed Python environment
         run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
-      - name: Install Chatterbox (only for videos that use it)
+      - name: Install Chatterbox, the human-sounding voices (first run only)
         if: steps.needs.outputs.chatterbox == 'true'
         run: |
+          python -c "import chatterbox, torch" 2>/dev/null && exit 0
           pip install -q torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q --no-deps chatterbox-tts==0.1.7
           pip install -q -r requirements-chatterbox.txt
 
       - name: Restore installed Node packages
@@ -237,6 +255,7 @@ jobs:
       - name: Make the video
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # used for fast, accurate word timing (Groq Whisper)
+          MUSIC_VOLUME: ${{ github.event.inputs.topic == '' && github.event.inputs.background_music || '' }}
         run: python engine/make_video.py "videos/${{ matrix.video }}"
 
       - name: Save script + voice cache to the repo
@@ -245,6 +264,8 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add "videos/${{ matrix.video }}/video.json" "videos/${{ matrix.video }}/.voice"
           [ -f "videos/${{ matrix.video }}/video.before-upgrade.json" ] && git add "videos/${{ matrix.video }}/video.before-upgrade.json"
+          [ -f "videos/${{ matrix.video }}/music.json" ] && git add "videos/${{ matrix.video }}/music.json"
+          for f in research.md script.txt; do [ -f "videos/${{ matrix.video }}/$f" ] && git add "videos/${{ matrix.video }}/$f"; done
           if ! git diff --quiet --cached; then
             git commit -m "Video ${{ matrix.video }}: script + voice cache [skip ci]"
             for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done

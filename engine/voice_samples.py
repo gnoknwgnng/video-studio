@@ -69,9 +69,11 @@ EXTRA = {   # curated extra voices (beyond each language's female/male default)
            "edge:en-US-BrianMultilingualNeural", "edge:en-US-AriaNeural", "edge:en-US-GuyNeural", "edge:en-US-JennyNeural",
            "edge:en-US-ChristopherNeural", "edge:en-GB-SoniaNeural", "edge:en-GB-RyanNeural", "edge:en-AU-NatashaNeural",
            "edge:en-IN-NeerjaExpressiveNeural", "edge:en-IN-PrabhatNeural", "piper:en_US-ryan-high", "piper:en_US-lessac-high",
-           "piper:en_GB-alan-medium", "chatterbox:default"],
-    "hi": ["kokoro:hf_alpha", "kokoro:hf_beta", "kokoro:hm_omega", "kokoro:hm_psi", "piper:hi_IN-pratham-medium",
+           "piper:en_GB-alan-medium", "chatterbox:bathri", "chatterbox:bevi", "chatterbox:hkl", "chatterbox:gyroo",
+           "chatterbox:indian_guy", "chatterbox:7020", "kokoro:af_heart", "kokoro:am_michael"],
+    "hi": ["edge:hi-IN-SwaraNeural", "edge:hi-IN-MadhurNeural", "kokoro:hf_alpha", "kokoro:hf_beta", "kokoro:hm_omega", "kokoro:hm_psi", "piper:hi_IN-pratham-medium",
            "piper:hi_IN-priyamvada-medium", "piper:hi_IN-rohan-medium"],
+    "en-in": ["chatterbox:haku", "chatterbox:a59a", "edge:en-IN-NeerjaExpressiveNeural", "edge:en-IN-PrabhatNeural"],
     "es": ["kokoro:ef_dora", "kokoro:em_alex", "edge:es-MX-DaliaNeural", "edge:es-MX-JorgeNeural"],
     "fr": ["kokoro:ff_siwis"], "it": ["kokoro:if_sara", "kokoro:im_nicola"], "pt": ["kokoro:pf_dora", "kokoro:pm_alex"],
     "ta": ["edge:ta-LK-SaranyaNeural", "edge:ta-SG-VenbaNeural"], "te": ["piper:te_IN-padmavathi-medium", "piper:te_IN-venkatesh-medium"],
@@ -88,6 +90,9 @@ def describe(engine, vid, lang):
         parts = vid.split("-"); nm = parts[2].replace("MultilingualNeural", " · multilingual").replace("ExpressiveNeural", " · expressive").replace("Neural", "")
         if parts[0] == "en" or parts[1] not in ("IN",) and parts[0] in ("es", "pt", "zh", "ar", "ta", "ur"): nm += f" ({parts[1]})"
     elif engine == "piper": nm = vid.split("-")[1].replace("_", " ").title()
+    elif engine == "chatterbox" and vid.lower() in VO.HUMAN_VOICES:
+        g, nm = VO.HUMAN_VOICES[vid.lower()]; gender = {"F": "Female", "M": "Male"}[g]
+        return {"label": f"{nm} — {gender.lower()}, most human-like", "gender": g, "note": "Chatterbox, a real person's voice (CC0 donation)"}
     else: nm = "Expressive (clone-able)"
     style = next((v.get("style", "") for v in L.edge_voices() if v["id"] == vid), "") if engine == "edge" else \
         {"kokoro": "offline, very natural", "piper": "offline", "chatterbox": "expressive, slow on CPU"}.get(engine, "")
@@ -101,7 +106,8 @@ def main():
     a = ap.parse_args()
     main_out = a.out[0]; os.makedirs(main_out, exist_ok=True)
     cat = {"languages": [], "voices": {}}
-    for code, (name, native, f, m) in L.LANGS.items():
+    for code, (name, native, _f, _m) in L.LANGS.items():
+        f, m = L.defaults(code)
         cat["languages"].append({"code": code, "name": name, "native": native})
         ids = list(dict.fromkeys([f, m] + EXTRA.get(code, [])))
         vs = []
@@ -109,12 +115,13 @@ def main():
             engine, vid = full.split(":", 1)
             d = describe(engine, vid, code)
             item = {"id": full, **d, "default": "female" if full == f else "male" if full == m else ""}
-            fn = full.replace(":", "_").replace("/", "_") + ".mp3"
+            fn = full.replace(":", "_").replace("/", "_") + (f"_{code}" if engine == "chatterbox" and code not in ("en", "en-us") else "") + ".mp3"
             text = SAMPLE.get(code) or SAMPLE.get(L.base(code)) or SAMPLE["en"]
             mp3 = os.path.join(main_out, fn)
-            if not a.no_audio and engine != "chatterbox" and not os.path.exists(mp3):
+            if not a.no_audio and not os.path.exists(mp3):
                 try:
                     spec = VO.parse_spec(full, code)
+                    if engine == "chatterbox": spec["reference"] = spec.get("reference") if os.path.isabs(spec.get("reference") or "") else None
                     x, sr, _ = VO.engine(engine).say(text, spec)
                     import soundfile as sf
                     wav = mp3[:-4] + ".wav"; sf.write(wav, x, sr)

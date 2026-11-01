@@ -20,6 +20,7 @@ import media as MEDIA    # noqa: E402
 import voices as VO      # noqa: E402
 import timing as TM      # noqa: E402
 import languages as LANG  # noqa: E402
+import audio as AU       # noqa: E402
 import fonts as FONTS    # noqa: E402
 import motion as MO      # noqa: E402
 NPX = shutil.which("npx") or "npx"
@@ -463,6 +464,7 @@ def main():
         if s.get("type") not in SC.BUILDERS: sys.exit(f'unknown scene type "{s.get("type")}". Use one of: {", ".join(SC.BUILDERS)}')
         if not s.get("lines"): sys.exit(f'scene "{s["type"]}" needs at least one voice line')
     lines, scene_of_line = flat_lines(scenes)
+    if cfg.get("voice_quality") in ("fast", "natural"): os.environ["VOICE_QUALITY"] = cfg["voice_quality"]
     lang = LANG.norm_code(a.lang or cfg.get("language") or LANG.looks_like(" ".join(l["say"] for l in lines)))
     theme = option(a.theme, cfg, "theme", "light", THEMES)
     sub_style = option(a.subtitles, cfg, "subtitles", "kinetic", SUB_STYLES)
@@ -561,6 +563,12 @@ def main():
         for s in scenes:
             if s.get("photos"): s["photos"] = [p for p in s["photos"] if p]
         log(f"pictures: {sum(1 for f in found if f)} of {len(jobs)} found")
+    # 2.5D: full-screen photos get a subject (or near) layer that moves faster than the background
+    if cfg.get("depth", True) and not os.environ.get("NO_25D"):
+        import depth as DEPTH
+        for s in [s for s in scenes if s["type"] == "photo" and s.get("photo_file")][:4]:
+            r = DEPTH.layers(os.path.join(media_dir, s["photo_file"]))
+            if r: s["layers"] = {"fg": os.path.basename(r["fg"]), "bg": os.path.basename(r["bg"]), "mode": r["mode"]}
     if any(s["type"] == "map" for s in scenes):
         credits.append("- World map: svg-maps/world by VictorCazanave (CC BY 4.0), https://github.com/VictorCazanave/svg-maps")
 
@@ -656,6 +664,26 @@ def main():
                       f'\n      tl.to("#s{i} .cam", {{ scale: 1, duration: 0.45, ease: "power3.inOut" }}, {t + 0.1:.3f});\n')
                 if kind == 2: j += MO.shake(f"#s{i} .cam", t, 9)
                 last = t
+        # retention: the first second hits hard (fast zoom-in + impact), and no stretch goes ~2.5 s without a visual change
+        if cfg.get("pacing", True):
+            if i == 0:
+                j += (f'\n      tl.fromTo("#s0 .pace", {{ scale: 1.14 }}, {{ scale: 1, duration: 0.55, ease: "power4.out" }}, 0);\n')
+                c.sfx("thud", 0.03, 0.8)
+            marks_t = sorted({round(t, 2) for k, t, g, _ in events[ev0:] if B[i] < t < B[i + 1]} | {B[i], B[i + 1]})
+            k = 0
+            for a_, b_ in zip(marks_t, marks_t[1:]):
+                if b_ - a_ < 2.8: continue
+                for n_ in range(1, int((b_ - a_) / 2.4) + 1):
+                    t = a_ + (b_ - a_) * n_ / (int((b_ - a_) / 2.4) + 1)
+                    if t > B[i + 1] - 0.6: continue
+                    if k % 2 == 0:   # a quick punch-in that settles back
+                        j += (f'\n      tl.to("#s{i} .pace", {{ scale: 1.045, duration: 0.18, ease: "power2.out" }}, {t:.3f});'
+                              f'\n      tl.to("#s{i} .pace", {{ scale: 1, duration: 0.7, ease: "power2.inOut" }}, {t + 0.18:.3f});\n')
+                    else:            # a small sideways drift
+                        dx = 1.6 if (i + k) % 4 < 2 else -1.6
+                        j += (f'\n      tl.to("#s{i} .pace", {{ xPercent: {dx}, scale: 1.03, duration: 0.5, ease: "power2.inOut" }}, {t:.3f});'
+                              f'\n      tl.to("#s{i} .pace", {{ xPercent: 0, scale: 1, duration: 0.8, ease: "power2.inOut" }}, {t + 0.55:.3f});\n')
+                    k += 1
         dur = round(B[i + 1] - B[i], 3)
         vid = s.get("video_file") if s["type"] == "broll" else s.get("bg_video")
         if vid:   # clips sit under the scenes, as their own timeline items
@@ -667,7 +695,7 @@ def main():
             h = f'<div class="bgphoto"><img src="media/{SC.E(s["photo"])}" alt="" /></div>' + h
             j += f'\n      tl.fromTo("#s{i} .bgphoto img", {{ scale: 1.18 }}, {{ scale: 1.02, duration: {dur}, ease: "none" }}, {B[i]});\n'
             j += f'      tl.fromTo("#s{i} .bgphoto", {{ opacity: 0 }}, {{ opacity: 1, duration: 0.6 }}, {B[i]});\n'
-        body.append(f'<div id="s{i}" class="clip sc-{s["type"]}" data-start="{B[i]}" data-duration="{dur}" data-track-index="1"><div class="inner"><div class="cam">{h}</div></div></div>')
+        body.append(f'<div id="s{i}" class="clip sc-{s["type"]}" data-start="{B[i]}" data-duration="{dur}" data-track-index="1"><div class="inner"><div class="pace"><div class="cam">{h}</div></div></div></div>')
         js_all.append(f"      // scene {i + 1}: {s['type']}\n      " + j)
         if s["type"] in SC.HIDE_BRAND:
             js_all.append(f'      tl.to("#brand", {{ opacity: 0, duration: 0.2 }}, {max(0, B[i] - 0.2):.3f});\n')
@@ -822,26 +850,40 @@ def main():
     srt = os.path.join(vdir, "out", f"{name}.srt")
     open(srt, "w", encoding="utf-8").write(srt_text(sub_words, lang))
 
-    # 6. sound design + music
-    track = None
-    if isinstance(music, str) and music not in FX.MOODS:
-        src = music if music.startswith(("http://", "https://")) else os.path.join(vdir, music)
-        try:
-            if src.startswith("http"):
-                import urllib.request
-                tmp = os.path.join(build, "audio", "music_src")
-                with urllib.request.urlopen(urllib.request.Request(src, headers={"User-Agent": "video-studio"}), timeout=60) as r, open(tmp, "wb") as f: f.write(r.read())
-                src = tmp
-            track, _ = VO.ffmpeg_decode(src, sr); log(f"music: {music}")
-        except Exception as e:
-            log(f"WARN could not use music '{music}' ({e}); using the 'upbeat' bed"); music = "upbeat"
-    mixed = FX.render_mix(vo, sr, events, total, mood=music if track is None else None, music=track,
-                          music_volume=cfg.get("music_volume"), sfx_volume=cfg.get("sfx_volume", 1.0))
+    # 6. sound design + music: a polished voice on top, real music well underneath (cut to the beat), effects
+    mv = os.environ.get("MUSIC_VOLUME", "").strip().lower()   # the workflow's "background music" choice
+    if mv in ("off", "none"): music = "none"
+    elif mv: cfg["music_volume"] = {"soft": "low", "loud": "high"}.get(mv, mv)
+    level = AU.music_level(cfg.get("music_volume"))
+    if str(music).lower() in ("none", "off", "no"): level = None
+    mood = music if music in FX.MOODS and music != "none" else cfg.get("music_mood", "upbeat")
+    vo_mix = AU.polish_voice(vo, sr, room=cfg.get("room_tone", True)) if cfg.get("voice_polish", True) else vo
+    fx = FX.render_fx(len(vo_mix), sr, events) * 0.22 * float(cfg.get("sfx_volume", 1.0))
+    bed, minfo = None, {}
+    if level is not None:
+        path, minfo = AU.find_music(vdir, {**cfg, "music": music}, mood, total + 3, build)
+        if path:
+            try:
+                start, bpm, hits = AU.align_start(AU.decode(path, sr), sr, B[1:-1], total)
+                bed = AU.prepare_track(path, sr, len(vo_mix), start)
+                minfo.update({"start": round(start, 2), "bpm": round(bpm), "cuts_on_beat": f"{hits}/{len(B) - 2}"})
+                log(f"music: {minfo.get('title') or minfo.get('file')} ({minfo.get('source')}), {bpm:.0f} BPM, "
+                    f"{hits}/{len(B) - 2} scene cuts on the beat, level {cfg.get('music_volume') or 'low'}")
+            except Exception as e:
+                log(f"WARN could not use the music track ({str(e)[:120]}); using the built-in bed"); bed, minfo = None, {}
+        if bed is None:
+            bed = np.pad(FX.music_bed(sr, len(vo_mix) / sr, mood), (0, len(vo_mix)))[:len(vo_mix)].astype("float32")
+            minfo = {"source": "built-in", "mood": mood}
+    mixed = AU.mix(vo_mix, fx, bed, sr, level)
     sf.write(os.path.join(build, "audio", "mix_raw.wav"), mixed, sr)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", "audio/mix_raw.wav", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000", "audio/final.wav"], cwd=build, check=True)
-    log(f"mixed {len(events)} sound effects, music: {music if track is None else 'custom track'}")
+    log(f"mixed {len(events)} sound effects, music: {minfo.get('source', 'off')}")
+    if minfo.get("credit"):   # CC BY music must be credited: added to credits.md (also printed in the Release notes)
+        cp = os.path.join(vdir, "out", "credits.md")
+        prev = open(cp, encoding="utf-8").read() if os.path.exists(cp) else ""
+        open(cp, "w", encoding="utf-8").write(prev + ("\n" if prev else "") + minfo["credit"] + "\n")
     json.dump({"duration": total, "language": lang, "voices": sorted({VO.voice_label(s) for s in specs}), "timing": srcs,
-               "scenes": [s["type"] for s in scenes], "warnings": warns}, open(os.path.join(vdir, "out", "info.json"), "w"), indent=2)
+               "scenes": [s["type"] for s in scenes], "music": minfo, "warnings": warns}, open(os.path.join(vdir, "out", "info.json"), "w"), indent=2)
     covers = []
     if cfg.get("covers", True) and not os.environ.get("NO_COVERS"):
         covers = make_covers(build, os.path.join(vdir, "out"), name, cfg, scenes, head_css, logo_html)

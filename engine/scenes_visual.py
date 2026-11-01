@@ -64,16 +64,32 @@ def _img_or_icon(it, cls, icon_size=150):
 def photo(s, c):
     """Full-screen photo with a slow push-in and a short caption."""
     S = f"#s{c.i}"
-    img = f'<img class="bp" src="media/{E(s["photo_file"])}" alt="" />' if s.get("photo_file") else \
-          f'<div class="bp noimg">{V.icon_svg(s.get("icon") or s.get("caption") or "", size=420)}</div>'
+    lay = s.get("layers") if s.get("photo_file") else None
+    if lay:   # 2.5D: background and subject move at different speeds
+        img = (f'<img class="bp" src="media/{E(lay["bg"])}" alt="" />'
+               f'<img class="bp fgp{" cut" if lay.get("mode") == "cutout" else ""}" src="media/{E(lay["fg"])}" alt="" />')
+    else:
+        img = f'<img class="bp" src="media/{E(s["photo_file"])}" alt="" />' if s.get("photo_file") else \
+              f'<div class="bp noimg">{V.icon_svg(s.get("icon") or s.get("caption") or "", size=420)}</div>'
     cap_em = f'<br/><em>{E(s["caption_em"])}</em>' if s.get("caption_em") else ""
     pos = "bottom" if s.get("caption_position") == "bottom" else "top"
     html = (f'<div class="full" data-layout-allow-overflow="true">{img}<div class="shade {pos}"></div></div>'
             f'<div class="ctr k kick {pos}">{E(s.get("kicker", ""))}</div><div class="ctr sf cap fit {pos}">{E(s.get("caption", ""))}{cap_em}</div>')
     tc = c.cue(s.get("cue", "x"), c.sb, frac=0.15)
+    if c.i == 0: tc = min(tc, c.sb + 0.4)    # the opener: words on screen inside the first second (many watch muted)
     zoom = (1.22, 1.03) if s.get("motion", "in") == "in" else (1.03, 1.2)
+    d = c.se - c.sb
+    if lay:
+        side = -1 if c.i % 2 else 1
+        move = f'''tl.fromTo("{S} .full .bp:not(.fgp)", {{ scale: 1.16, xPercent: {2 * side} }}, {{ scale: 1.04, xPercent: {-1 * side}, duration: {d:.3f}, ease: "none" }}, {c.sb});
+      tl.fromTo("{S} .full .fgp", {{ scale: 1.26, xPercent: {4 * side}, yPercent: 3 }}, {{ scale: 1.08, xPercent: {-2.5 * side}, yPercent: 0, duration: {d:.3f}, ease: "none" }}, {c.sb});
+      tl.fromTo("{S} .shade", {{ opacity: 0.55 }}, {{ opacity: 0.9, duration: 0.5 }}, {max(c.sb + 0.2, tc - 0.25):.3f});
+'''
+    else:
+        move = f'''tl.fromTo("{S} .full .bp", {{ scale: {zoom[0]}, xPercent: {-2 if c.i % 2 else 2} }}, {{ scale: {zoom[1]}, xPercent: 0, duration: {d:.3f}, ease: "none" }}, {c.sb});
+'''
     js = f'''tl.fromTo("{S} .full", {{ opacity: 0 }}, {{ opacity: 1, duration: 0.35 }}, {c.sb});
-      tl.fromTo("{S} .full .bp", {{ scale: {zoom[0]}, xPercent: {-2 if c.i % 2 else 2} }}, {{ scale: {zoom[1]}, xPercent: 0, duration: {c.se - c.sb:.3f}, ease: "none" }}, {c.sb});
+      {move.strip()}
       tl.fromTo("{S} .kick", {{ opacity: 0, y: 20 }}, {{ opacity: 1, y: 0, duration: 0.3, ease: snap }}, {c.sb + 0.15:.3f});
       tl.fromTo("{S} .cap", {{ y: 60, opacity: 0 }}, {{ y: 0, opacity: 1, duration: 0.4, ease: snap }}, {max(c.sb + 0.2, tc - 0.25):.3f});
 '''

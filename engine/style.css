@@ -395,3 +395,7 @@ svg.ico { display: block; flex: none; }
 .sc-gauge .kick, .sc-funnel .kick, .sc-cycle .kick, .sc-chat .kick, .sc-reveal .kick, .sc-spotlight .kick { top: 204px; }
 .sc-gallery .t, .sc-chart .t, .sc-flow .t, .sc-icons .t, .sc-versus .t, .sc-map .t, .sc-pictogram .t, .sc-kpis .t, .sc-bubbles .t,
 .sc-gauge .t, .sc-funnel .t, .sc-cycle .t, .sc-chat .t, .sc-reveal .t, .sc-spotlight .t { top: 238px; height: 90px; font-size: 70px; }
+
+/* 2.5D photos: the subject layer sits on top of the filled background and moves faster */
+.full .fgp { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.full .fgp.cut { filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.45)); }

@@ -22,10 +22,12 @@ video.json ─► voice (Kokoro · Edge · Piper · Chatterbox) ─► word timi
 | Formats | product / hiring / education | + listicle, news, story, tutorial, comparison, pitch, announcement, motivational |
 | Look | light | light or **dark** theme, 26 icons, brand colours kept readable automatically |
 | Subtitles | kinetic | kinetic, **bold**, **karaoke**, classic or none; plus an `.srt` file for uploads |
-| Music | one beat | **upbeat, calm, dramatic, tech, news**, or your own track (auto-ducked under the voice) |
+| Voice sound | robotic | **human-sounding by default** (Chatterbox Turbo / Hindi / Multilingual V3 with real donated voices), studio polish, room tone, or **your own voice** |
+| Music | one beat | **real music** (your `music/` folder, or free CC0 / CC BY tracks found automatically, credited), **cut to the beat**, soft under the voice; on/off + volume |
+| Photos | flat | **2.5D**: the subject is cut out and moves separately from the background (a 3D camera move from one still photo) |
 | Facts | model memory | **research first** (Wikipedia always, Tavily web search optional), sources in the release notes |
 | Footage | photos | photos + **stock video** (Pexels / Pixabay, optional free keys) |
-| First render | 25–35 min (installs PyTorch) | **about 5–10 min** (PyTorch only if a video uses Chatterbox) |
+| First render | 25–35 min (installs PyTorch) | **about 12–18 min** the first time (installs and caches the voice models), then **6–12 min** |
 
 Old videos keep working: a `video.json` from version 1 still uses Chatterbox and its cached voice lines.
 
@@ -59,7 +61,8 @@ Old videos keep working: a `video.json` from version 1 still uses Chatterbox and
 | topic | `How UPI payments work in India` · `UPI kaise kaam karta hai` · `मानसून क्यों ज़रूरी है` · a pasted job post |
 | language | `en`, `hi`, `hinglish`, `ta`, `te`, `bn`, `mr`, `gu`, `kn`, `ml`, `ur`, `es`, `fr`, `de`, `ar`, `zh`, `ja`, `ko`… (empty = detect) |
 | voice | `auto`, `female`, `male`, or an id: `am_michael`, `edge:hi-IN-MadhurNeural`, `piper:en_US-ryan-high` |
-| options | `format=listicle; duration=short; tone=funny; theme=dark; music=calm; subtitles=bold; pace=normal; research=no` |
+| background music | **soft** (default, the voice stays on top), medium, loud, or off |
+| options | `format=listicle; duration=short; tone=funny; theme=dark; music=calm; subtitles=bold; pace=normal; research=no; voice_quality=fast; logo=https://…` |
 
 The AI writes `videos/<topic>/video.json` (commit edits to it to re-render), then the video is built.
 **Always watch the result before sharing:** AI can still get facts wrong.
@@ -69,7 +72,9 @@ The AI writes `videos/<topic>/video.json` (commit edits to it to re-render), the
 **On your computer:**
 ```bash
 npm ci && npx hyperframes browser ensure
-pip install -r requirements.txt                    # + requirements-chatterbox.txt only for Chatterbox
+pip install -r requirements.txt
+pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu   # human-sounding voices:
+pip install --no-deps chatterbox-tts==0.1.7 && pip install -r requirements-chatterbox.txt
 export GROQ_API_KEY=gsk_...
 python engine/write_script.py "Top 5 habits of great founders" --lang hinglish --voice male --format listicle --duration short
 python engine/make_video.py videos/top-5-habits-of-great-founders
@@ -118,6 +123,32 @@ Any item can carry an `"icon"` (any English word, matched to one of 2,292 [Lucid
 Wikimedia Commons and NASA (searched in parallel, with a time limit so a slow archive never stalls a render). When no photo
 is found, the tile shows its icon instead. Charts must use real figures: the AI may only chart numbers from its research or your notes.
 
+## How a script is made: research first, then one proper script
+
+1. **Research** (`engine/research.py`, all free). The AI first lists the questions a good video on the topic must answer
+   (what it is, how it works, the key numbers, who/where, what's surprising, common myths). Then it reads:
+   - the **full Wikipedia articles** (the paragraphs that answer those questions, in English and the video's language),
+   - **web search** through Groq's `groq/compound` model (same free Groq key) for current facts with links,
+   - **recent news** headlines from GDELT (open data, last 6 months),
+   - Tavily web search too, if `TAVILY_API_KEY` is set.
+
+   Everything becomes a **research brief**: key facts with numbers, years and their source, the most surprising facts, a short
+   timeline, and what's uncertain. It's saved as `videos/<name>/research.md` with all the source links.
+2. **The script**, written as plain text from the brief, like a creator writes a voiceover: **hook → why it matters → the core in
+   2-3 steps → the twist ("but here's the catch") → the payoff → a close that loops back to the hook.** The AI writes 5 hooks and
+   keeps the best, writes **2 drafts** and a judge keeps the stronger one, then a **fact check** compares every number, name and
+   claim with the brief and fixes or removes anything unsupported. Saved as `videos/<name>/script.txt` and shown in the Actions
+   summary.
+3. **The visuals.** The finished script is split into scenes, word for word, and each part gets the picture that shows it
+   (a number -> a counter or chart, a process -> a flow diagram, a place -> a map...). An automatic check makes sure the
+   narration wasn't changed in this step.
+
+Writing rules throughout: written for the ear, specific facts instead of vague claims, a short pull-forward line every 8-10 s,
+no AI-sounding phrases ("game-changer", "delve", "in today's world"... are blocked), Hindi written directly in everyday spoken Hindi.
+
+Free Groq tier: one video uses roughly 30-40k tokens (about 5 new videos a day on the free 200k-token daily limit; the web
+search runs on a separate model). `SCRIPT_DRAFTS=1` (repo variable) uses less; `RESEARCH_WEB=off` skips the web search.
+
 ## Upgrading older, text-heavy videos
 
 Videos whose `video.json` was written before the picture-first engine (problem / intro / steps / question / compare cards)
@@ -140,6 +171,66 @@ keeping its facts, company, voice, colours and as many recorded voice lines as p
   in the workflow options) also makes YouTube/LinkedIn/feed versions, with a blurred copy of the video filling the sides.
   They are attached to the Release and offered in the gallery.
 
+## Human-sounding voices
+
+English, Indian English and Hindi use **Chatterbox** by default (Resemble AI, MIT licence, runs on the free GitHub CPU):
+**Chatterbox Turbo** for English, Resemble's dedicated **Hindi** model for Hindi, **Chatterbox Multilingual V3** for 21 more
+languages (`chatterbox:<voice>` with `"language"` set). Instead of a synthetic voice, it copies the sound of a **real person**:
+
+| Voice id | Who | Default for |
+|---|---|---|
+| `chatterbox:haku` | female | English (female) |
+| `chatterbox:a59a` ("Arlo") | male | English (male) |
+| `chatterbox:bathri` | female | Hindi + Indian English (female) |
+| `chatterbox:indian_guy` ("Dev") | male, Indian English | Hindi + Indian English (male) |
+| `chatterbox:bevi`, `chatterbox:hkl` | female | |
+| `chatterbox:gyroo`, `chatterbox:7020` ("Baron", deep) | male | |
+
+These are volunteers who donated their voices under **CC0** (Kyutai's *Unmute* voice-donation project); the 10-second
+recordings are in `engine/data/voices/`.
+
+**Your own voice:** record 10–20 seconds of yourself (quiet room, normal speaking pace, any text), save it as
+`voices/me.wav` in the repo, and use the voice `chatterbox:me`. Any name works: `voices/priya.wav` → `chatterbox:priya`.
+Only clone a voice with that person's permission. Every Chatterbox clip carries Resemble's inaudible "Perth" watermark
+that marks it as AI-generated.
+
+**What else makes it sound human** (all automatic): the AI writes for the ear (contractions, mixed sentence lengths, a question
+now and then, an ending that loops back to the start); each line is checked and re-generated if a take runs on or cuts off;
+the narration goes through a studio chain (rumble cut, de-esser, gentle compression, warmth and presence EQ, a hint of room)
+and soft room tone fills the pauses, so they never go digitally silent.
+
+**Speed:** Chatterbox is slower than the other voices (on the free 4-core runner: about 2 min of work for a 45 s English video,
+3–4 min for Hindi). `voice_quality=fast` in the options (or *Voice quality: Fast* on the website) uses Kokoro / Edge instead.
+If Chatterbox can't run, the video is voiced with the fast voice of the same gender automatically.
+
+## Background music
+
+The voice always stays on top: the music sits about 19 dB under the voice (**soft**, the default; *medium* -15 dB, *loud* -11 dB)
+and dips another 6 dB while someone speaks. Its 1–4 kHz range is carved out so it never competes with words.
+Choose it in *Actions → Make video → background music* (or *Music volume* on the website); `"music_volume"` in video.json.
+
+Where the track comes from, in order:
+1. `"music": "song.mp3"` in video.json (a file next to it, or an https link)
+2. **your own tracks**: put them in `music/` (repo root), or `music/<mood>/` (`upbeat`, `calm`, `dramatic`, `tech`, `news`)
+3. a free **CC0 / CC BY** track found on Openverse (Jamendo, Freesound, Wikimedia) for the video's mood; remembered in
+   `videos/<name>/music.json` and credited in `out/credits.md` and the Release notes
+4. a free track shipped with Video Studio (`engine/data/music/`, CC BY 3.0, credited), if the search is down
+5. the synthesised bed (always works offline)
+
+**Cut to the beat:** the track's tempo and beats are detected, and it's started at the point where its beats land on
+the scene changes. `"music": "none"` (or *off*) turns music off.
+
+## 2.5D photos, cutouts and pacing
+
+- **2.5D photos.** Every full-screen photo is split into two layers with open models that run on the CPU: the main subject is
+  cut out (IS-Net, Apache-2.0, the model behind rembg) or, for scenery, the near part is found with Depth Anything V2 Small
+  (Apache-2.0). The space behind it is filled from the surroundings, and the two layers move at different speeds, so one
+  still photo gets a 3D camera move. Cut-out subjects get a soft shadow and lift off the background. `"depth": false` turns it off.
+- **The first second.** The opening scene starts with a fast zoom and an impact sound, and its words are on screen within
+  ~0.4 s (most people start a Reel or Short with the sound off).
+- **Something changes every ~2.5 s.** Any stretch without a new animation gets a quick punch-in or a slow sideways drift.
+  `"pacing": false` turns it off.
+
 ## Voices
 
 ```bash
@@ -149,10 +240,10 @@ python engine/voices.py --say "Hello there" --voice edge:en-IN-NeerjaExpressiveN
 
 | Engine | Voices | Languages | Notes |
 |---|---|---|---|
-| `kokoro` | 54 | English (US/UK), Hindi, Spanish, French, Italian, Portuguese | offline, very natural, default for English. Blend voices: `{"engine":"kokoro","blend":{"af_heart":0.6,"af_bella":0.4}}` |
+| `chatterbox` | 8 real people + your own | English, Hindi + 21 languages | **most human-like; default for English, Indian English and Hindi.** Clone with `voices/<name>.wav`. Slower on CPU. |
+| `kokoro` | 54 | English (US/UK), Hindi, Spanish, French, Italian, Portuguese | offline, fast; used with `voice_quality=fast`. Blend voices: `{"engine":"kokoro","blend":{"af_heart":0.6,"af_bella":0.4}}` |
 | `edge` | 316 | 75 languages | Microsoft Edge neural voices; exact word timing; `speed`, `pitch` (`"+5Hz"`) |
 | `piper` | 178 | ~50 languages | offline, downloaded once |
-| `chatterbox` | clone | English + 22 languages | expressive; `"reference": "myvoice.wav"` clones a voice from ~10 s of audio (with consent). Slow on CPU. |
 
 If a voice fails (e.g. the Edge service hiccups), every line of that speaker is re-voiced with a similar free voice,
 so the voice never changes mid-video. The website has a voice picker with samples (`engine/voice_samples.py` builds it).
@@ -210,6 +301,10 @@ engine/media.py         photos, logos, stock video (Pexels, Pixabay, Openverse, 
 engine/clip_rank.py     CLIP photo matching (offline ONNX model): picks the photo that fits the words
 engine/cover.cjs        renders the designed cover images in headless Chrome
 engine/sfx.py           sound effects + 5 music moods, synthesised in code
+engine/audio.py         voice polish, real music (music/ folder, Openverse, bundled), beat detection + alignment, voice-first mix
+engine/depth.py         2.5D photos: subject cutout (IS-Net) / depth (Depth Anything V2 Small), background fill
+engine/data/voices/     CC0 donated voices used by Chatterbox (Kyutai Unmute voice donations)
+engine/data/music/      free fallback music (CC BY 3.0, credits.json)
 engine/style.css        shared look; brand colours, themes and subtitle styles
 engine/needs.py         tells the workflow what to install for a video
 engine/voice_samples.py builds the voice picker (site/voices, web/voices)
@@ -219,5 +314,6 @@ web/                    private Vercel site with logins (see web/README.md)
 videos/                 one folder per video (examples: acme-motion, how-the-internet-reaches-you, acme-visual-tour, docsdocs, internet-history, upi-hindi)
 ```
 
-Tech: Groq · Kokoro-82M (ONNX) · Microsoft Edge neural TTS · Piper · Chatterbox · faster-whisper · HyperFrames 0.8.181 ·
+Tech: Groq · Chatterbox Turbo / Multilingual V3 / Hindi (Resemble AI, MIT) · Kokoro-82M (ONNX) · Microsoft Edge neural TTS · Piper ·
+IS-Net + Depth Anything V2 Small (ONNX) · Openverse music · faster-whisper · HyperFrames 0.8.181 ·
 GSAP 3.14.2 · Google Noto fonts · Python/NumPy · FFmpeg. Footage: Pexels, Pixabay, Openverse, Wikimedia Commons, NASA.

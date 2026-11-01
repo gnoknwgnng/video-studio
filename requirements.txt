@@ -3,7 +3,7 @@ kokoro-onnx==0.6.1
 edge-tts==7.3.1
 piper-tts==1.8.0
 faster-whisper==1.2.1
-tokenizers==0.23.3          # CLIP photo matching (onnxruntime comes with kokoro-onnx)
+tokenizers==0.22.2          # CLIP photo matching (onnxruntime comes with kokoro-onnx); <=0.23.0 for Chatterbox
 soundfile
 numpy
 Pillow

@@ -116,9 +116,17 @@ def edge_voices():
     return _edge
 
 
-def defaults(code):
+# The most human-sounding default per language (Chatterbox + real donated voices). VOICE_QUALITY=fast switches back to
+# the fast voices above (Kokoro / Edge), which is also what is used if Chatterbox cannot run.
+NATURAL = {"en": ("chatterbox:haku", "chatterbox:a59a"), "en-us": ("chatterbox:haku", "chatterbox:a59a"),
+           "en-in": ("chatterbox:bathri", "chatterbox:indian_guy"), "hi": ("chatterbox:bathri", "chatterbox:indian_guy")}
+
+
+def defaults(code, natural=None):
     """(female, male) default voices for a language, as 'engine:id'."""
     c = norm_code(code)
+    if natural is None: natural = os.environ.get("VOICE_QUALITY", "natural").lower() != "fast"
+    if natural and c in NATURAL: return NATURAL[c]
     for k in (c, base(c)):
         if k in LANGS: return LANGS[k][2], LANGS[k][3]
     loc = c if "-" in c else c + "-"

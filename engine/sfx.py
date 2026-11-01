@@ -131,6 +131,15 @@ def beat_bed(sr, total, bpm=100):   # kept for compatibility with older code
     return music_bed(sr, total, "upbeat")
 
 
+def render_fx(n, sr, events):
+    """The sound effects alone, as one track of n samples."""
+    fx = np.zeros(n)
+    for kind, t, gain, args in events:
+        s = GEN[kind](sr, *args); st = max(0, int(t * sr)); e = min(n, st + len(s))
+        if e > st: fx[st:e] += gain * s[: e - st]
+    return fx.astype("float32")
+
+
 def render_mix(vo, sr, events, total, mood="upbeat", music=None, music_volume=None, sfx_volume=1.0):
     """Voice + sound effects + music (synthesised `mood`, or `music` = a float array at `sr`), with ducking."""
     N = len(vo); fx = np.zeros(N)

@@ -113,7 +113,8 @@
           <div><label for="duration">Length</label><select id="duration"><option value="short">Short (20–35 s)</option><option value="standard" selected>Standard (35–55 s)</option><option value="long">Long (60–100 s)</option></select></div>
           <div><label for="tone">Tone</label><select id="tone"><option value="">Energetic</option><option>friendly</option><option>professional</option><option>dramatic</option><option>funny</option><option>calm</option><option>inspirational</option><option>authoritative</option><option>casual</option></select></div>
           <div><label for="theme">Look</label><select id="theme"><option value="">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
-          <div><label for="music">Music</label><select id="music"><option value="">Auto</option><option>upbeat</option><option>calm</option><option>dramatic</option><option>tech</option><option>news</option><option value="none">No music</option></select></div>
+          <div><label for="music">Music style</label><select id="music"><option value="">Auto</option><option>upbeat</option><option>calm</option><option>dramatic</option><option>tech</option><option>news</option><option value="none">No music</option></select></div>
+          <div><label for="musicVol">Music volume</label><select id="musicVol"><option value="low">Soft (voice on top)</option><option value="medium">Medium</option><option value="high">Loud</option></select></div>
           <div><label for="subtitles">Subtitles</label><select id="subtitles"><option value="">Kinetic (1–3 words)</option><option value="bold">Bold pop</option><option value="karaoke">Karaoke line</option><option value="classic">Classic</option><option value="none">None</option></select></div>
         </div>
         <details>
@@ -122,6 +123,8 @@
           <textarea id="notes" rows="2" maxlength="4000" placeholder="Audience, facts to include, call to action, words to avoid"></textarea>
           <label for="logo">Logo image link (optional)</label>
           <input type="url" id="logo" placeholder="https://example.com/logo.png" />
+          <div class="opts two"><div><label for="vq">Voice quality</label><select id="vq"><option value="natural">Most human (slower to make)</option><option value="fast">Fast</option></select></div>
+            <div></div></div>
           <div class="opts two"><div><label for="pace">Pace</label><select id="pace"><option value="">Fast (Reels)</option><option value="normal">Normal</option><option value="relaxed">Relaxed</option></select></div>
             <div><label for="visual">Visual style</label><select id="visual"><option value="">Picture-first (photos, charts, diagrams)</option><option value="no">Text-led (classic)</option></select></div></div>
           <div class="check"><input type="checkbox" id="research" checked /><label for="research" style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink)">Research the topic first <span class="hint" style="display:block;margin:2px 0 0">Wikipedia, plus web search if a Tavily key is set. Sources go in the release notes.</span></label></div>
@@ -185,7 +188,7 @@ $("makeForm").addEventListener("submit", async (e) => {
     const v = (id) => $(id).value;
     await api("make", { topic, notes: $("notes").value.trim(), logo: $("logo").value.trim(), site_photos: $("sitePhotos").checked,
       language: v("lang"), voice: v("voice"), format: v("format"), duration: v("duration"), tone: v("tone"), theme: v("theme"),
-      music: v("music"), subtitles: v("subtitles"), pace: v("pace"), visual: v("visual") !== "no", research: $("research").checked });
+      music: v("music"), music_volume: v("musicVol"), voice_quality: v("vq"), subtitles: v("subtitles"), pace: v("pace"), visual: v("visual") !== "no", research: $("research").checked });
     msg($("makeMsg"), "Started! Follow the progress on the right.", "good");
     $("topic").value = ""; setTimeout(loadRuns, 2500);
   } catch (err) { msg($("makeMsg"), err.message, "bad"); }

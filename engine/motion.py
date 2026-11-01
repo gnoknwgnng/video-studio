@@ -39,6 +39,7 @@ def burst(c, x, y, t, color="var(--accent)", n=12, radius=170, size=18):
 
 CSS = """
 .cam { position: absolute; inset: 0; transform-origin: 50% 22%; }
+.pace { position: absolute; inset: 0; transform-origin: 50% 40%; }
 .burst-fx { position: absolute; width: 0; height: 0; z-index: 20; pointer-events: none; }
 .burst-fx .ring { position: absolute; left: -90px; top: -90px; width: 180px; height: 180px; border-radius: 50%; border: 10px solid; opacity: 0; }
 .burst-fx b { position: absolute; left: 0; top: 0; border-radius: 50%; opacity: 0; }

@@ -1,3 +1,17 @@
-# Optional: Chatterbox voice cloning (installed by the workflow only when a video uses "chatterbox").
-# Needs PyTorch first: pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
-chatterbox-tts==0.1.7
+# Chatterbox: the most human-sounding voices (Resemble AI, MIT). The workflow installs it like this:
+#   pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+#   pip install --no-deps chatterbox-tts==0.1.7      (skips the demo-app packages it does not need, e.g. gradio)
+#   pip install -r requirements-chatterbox.txt
+librosa==0.11.0
+s3tokenizer==0.3.0
+transformers==5.2.0
+diffusers==0.29.0
+resemble-perth==1.0.1
+conformer==0.3.2
+safetensors==0.5.3
+pyloudnorm==0.2.0
+omegaconf==2.4.0
+pykakasi==2.3.0
+einops
+scipy
+huggingface_hub

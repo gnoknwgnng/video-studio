@@ -6,9 +6,11 @@
   python engine/write_script.py "Top 5 mistakes first-time founders make" --format listicle --tone funny --theme dark
   python engine/write_script.py "<paste a job post, press release or article>" --lang ta
 
-Steps: (1) understand the input (pasted posts are digested into facts), (2) research current facts
-(Tavily if TAVILY_API_KEY is set, Wikipedia always), (3) draft, (4) automatic checks sent back to the model
-until they pass, (5) an editor pass for facts, grammar and flow. Writes videos/<folder>/video.json.
+Steps: (1) understand the input (pasted posts are digested into facts), (2) RESEARCH (engine/research.py): the questions the
+video must answer, full Wikipedia articles, Groq web search, recent news, Tavily if set -> a research brief with sources,
+(3) the SCRIPT, as plain text from the brief: 5 hooks -> the best one, 2 drafts (SCRIPT_DRAFTS=1-3) -> a judge picks the
+stronger, then a fact check of every claim against the brief, (4) the VISUALS: the finished script is split into scenes and each
+part gets the picture that shows it, checked automatically. Writes videos/<folder>/video.json, script.txt and research.md.
 
   python engine/write_script.py --upgrade videos/docsdocs   # rewrite an existing script picture-first (keeps facts + voice lines)
 """
@@ -21,6 +23,7 @@ import languages as LANG  # noqa: E402
 import timing as TM       # noqa: E402
 import research as RS     # noqa: E402
 import visuals as VIS     # noqa: E402
+import story as STORY     # noqa: E402
 
 API = os.environ.get("GROQ_API_URL") or "https://api.groq.com/openai/v1/chat/completions"   # any OpenAI-compatible endpoint works
 TYPES = ["spotlight", "photo", "gallery", "chart", "flow", "icons", "versus", "map", "pictogram", "kpis", "bubbles", "gauge", "funnel", "cycle",
@@ -33,19 +36,19 @@ SUPPORT = {"problem", "intro", "steps", "timeline", "list"}   # text-heavy layou
 CHART_KINDS = ("bar", "column", "line", "donut", "pie")
 ICONS = ["document", "tooth", "heart", "shield", "building", "box", "chip", "phone", "globe", "rocket", "bulb", "bag", "user",
          "briefcase", "lock", "chart", "leaf", "book", "home", "cap", "mail", "chat", "bolt", "cloud", "cross", "coin"]
-FORMATS = {
-    "auto": "choose the best structure for the topic, picture scenes first",
-    "explainer": "spotlight or photo -> flow (how it works) -> gallery or icons -> chart or number -> versus -> end",
-    "product": "spotlight (mood bad: the pain) -> number or chart -> spotlight or gallery (the product) -> website (if it has one) -> flow -> versus -> end",
-    "listicle": "photo or spotlight -> gallery (photos) or icons -> chart, kpis or number -> icons -> end",
-    "news": "photo -> map (where it happened) -> chart or number -> flow (what happened) -> icons (what it means) -> end",
-    "story": "photo -> map -> flow (the turning points) -> number or chart -> reveal (before/after) -> end",
-    "tutorial": "photo or spotlight -> flow (the steps) -> icons (mistakes to avoid) -> reveal or versus -> end",
-    "comparison": "spotlight or photo -> versus -> chart (bar or column) -> bubbles or kpis -> end",
-    "hiring": "spotlight (kicker \"We're hiring\", satellites = the roles) -> gallery (the workplace) -> icons (perks) -> kpis (pay, openings) -> map (if locations) -> end (how to apply)",
-    "pitch": "presenter -> spotlight (mood bad: the problem) -> number -> flow -> versus -> end (the ask)",
-    "motivational": "photo -> spotlight -> icons -> broll -> end",
-    "announcement": "spotlight (mood good) -> gallery or icons (what's new) -> chart, kpis or number -> flow -> end (call to action)",
+FORMATS = {   # what the video must cover; the ORDER of scenes comes from the story style chosen for each video
+    "auto": "choose what to cover from the topic",
+    "explainer": "make one idea clear: what it is, how it works, why it matters to the viewer",
+    "product": "the viewer's pain, the product as the fix, proof (numbers), who it's for, the website if it has one",
+    "listicle": "a numbered set of items, each shown as its own picture, the best one saved for last",
+    "news": "what happened, where (map), the key figure, why it matters, what happens next",
+    "story": "the dramatic moment, how it began, the turning points, where it stands today",
+    "tutorial": "the result first, then the steps, the mistake to avoid, the first step for the viewer",
+    "comparison": "two (or three) options compared on 2-3 rounds, with a clear verdict for whom",
+    "hiring": "the employer, the roles, what the work is like, pay/perks/locations from the notes, exactly how to apply",
+    "pitch": "who the person is (presenter), the problem they solve, proof, the ask",
+    "motivational": "one relatable struggle, a turn, a concrete action, an uplifting close",
+    "announcement": "what's new, why it matters, the key figure, the call to action",
 }
 DURATIONS = {"short": (20, 35), "standard": (35, 55), "long": (60, 100)}
 TONES = ["energetic", "friendly", "professional", "dramatic", "funny", "calm", "inspirational", "authoritative", "casual"]
@@ -101,7 +104,7 @@ Supporting scenes (keep few):
 
 SHOW, DON'T WRITE (most important):
 - At least three quarters of the scenes are PICTURE scenes; at most ONE "supporting" scene in the whole video.
-- Open with a picture, not a sentence: a "spotlight" (mood "bad" for a problem hook) or a "photo". Use "hook" only when a line of text is the point.
+- Open with a picture, not a sentence: the visual that best SHOWS the hook (a big number, a chat, a map, a photo, a spotlight...). Use "hook" only when a line of text is the point.
 - Keep on-screen words to a minimum: titles are optional in picture scenes; let icons, photos and numbers carry the meaning.
 - Numbers -> chart or number scene. A series of numbers -> chart. Several key figures -> kpis. A share of people -> pictogram.
   Sizes compared -> bubbles. A score or level -> gauge. Numbers that narrow -> funnel. Places -> map. A process or journey -> flow.
@@ -112,7 +115,18 @@ SHOW, DON'T WRITE (most important):
 
 RULES
 - First 7 spoken words = a scroll-stopping hook (surprising fact, bold claim, question). No greetings, no "welcome", no "in this video", no company name first.
-- Spoken lines: short, punchy, natural speech. One idea per sentence. No lists of nouns read aloud without verbs. No filler.
+- Spoken lines: write for the EAR, like a real creator talking to one friend: contractions (it's, you'll, don't, here's),
+  a mix of very short and longer sentences, the odd natural opener ("So,", "Now,", "Here's the thing:"), a question to the
+  viewer now and then. One idea per sentence. No lists of nouns read aloud without verbs. No filler, no corporate words.
+- Loop: the last spoken line connects back to the first one (same image, word or question), so a replay feels seamless.
+- STORY: one proper story (hook, why it matters, the core in 2-3 steps, the twist, the payoff, a close that loops to the hook), never "intro, facts, outro".
+- Mini-hooks: every 8-10 seconds, one short line that pulls the viewer forward ("And that's where it gets weird.",
+  "But here's the catch.", "Now the surprising part."). Vary them; never the same one twice.
+- Be specific: every scene carries one concrete thing from FACTS/notes or common knowledge: a real number, a name, a place,
+  an everyday example ("your morning chai", "a 2 a.m. food order"). Never vague filler ("many people", "a lot of things").
+- Sound human, not like an AI: never use phrases like "in today's fast-paced world", "game-changer", "delve", "dive into",
+  "unlock", "unleash", "revolutionize", "seamless", "cutting-edge", "harness the power", "landscape", "realm", "moreover",
+  "furthermore", "in conclusion", "leverage", "robust", "stay tuned", "in this video", "buckle up".
 - Every "cue"/"*_cue" is ONE word copied exactly from the "say" text of THAT scene, in the order the visuals appear.
 - On-screen text is short (see word limits) and never repeats title/title_em or tagline/tagline_em.
 - Use the exact "company" text as question.em and compare.right_label.
@@ -120,15 +134,14 @@ RULES
 - Seeds: 42, 43, 44... one per line.
 - Colours: primary = strong brand/topic colour; accent = lighter related hue; alert = red/orange; ink = near-black; background = near-white (light theme) or near-black (dark theme).
 
-EXAMPLE scenes (style and quality bar only; different topic):
-{"type":"spotlight","kicker":"Every Friday","icon":"file-text","mood":"bad","satellites":[{"icon":"sheet","label":"Spreadsheets","cue":"spreadsheets"},{"icon":"copy","label":"Copy-paste","cue":"copy"},{"icon":"moon","label":"Late nights","cue":"late"},{"icon":"mail-warning","label":"Angry emails","cue":"angry"}],"lines":[{"say":"Every Friday it's the same. Spreadsheets, copy and paste, late nights, and angry emails.","seed":41}]}
-{"type":"photo","kicker":"One click","caption":"Every page you open","caption_em":"crosses the world.","image_query":"person using laptop at night","lines":[{"say":"Every web page you open crosses the world in under a second.","seed":42}]}
-{"type":"flow","title":"Where your click goes","nodes":[{"label":"Your phone","icon":"smartphone","cue":"phone"},{"label":"Router","icon":"router","cue":"router"},{"label":"Undersea cables","icon":"cable","cue":"cables"},{"label":"Data center","icon":"server","cue":"center"}],"lines":[{"say":"Your phone sends it to your router, along undersea cables, and into a data center.","seed":43}]}
-{"type":"chart","kind":"line","title":"People online","unit":"B","source":"ITU estimates","data":[{"label":"2005","value":1.0,"cue":"two"},{"label":"2015","value":3.2},{"label":"2023","value":5.4,"cue":"today"}],"lines":[{"say":"In two thousand five, one billion people were online. Today, more than five billion.","seed":44}]}
-{"type":"end","tagline":"Fifty years old.","tagline_em":"Still day one.","logo_cue":"internet","tagline_cue":"fifty","lines":[{"say":"Fifty years old, and still day one. That's the internet.","seed":50}]}
 """
 
 LANG_RULES = {
+    "hi": 'Write ALL "say" and on-screen text in everyday spoken Hindi (Devanagari), the way a popular Indian YouTuber talks to friends: '
+          'simple Hindustani, with the English words people really use (phone, app, online, payment, bank, office). Write it directly in Hindi, '
+          'never translate from English. Avoid formal/Sanskritised words (use "लेकिन/पर" not "किंतु", "मदद" not "सहायता", "शुरू" not "आरंभ", '
+          '"इस्तेमाल" not "उपयोग", "ज़रूरी" not "आवश्यक"). Numbers in "say" as spoken Hindi words, digits in "sub". '
+          'Keep JSON keys, "type" values, icons, colours, image_query and video_query in English. Cue words are copied exactly from the Hindi "say" text.',
     "en": 'Write names the way they should SOUND in "say" (e.g. "Docs, Docs", "U P I") and add "sub" with the real spelling. '
           'Write numbers and years in "say" as spoken words ("nineteen eighty-three", "two thousand"), with digits in "sub".',
     "hinglish": 'Write "say" in Hinglish: Hindi in Latin script mixed with English, the way Indian creators talk ("Aaj hum dekhenge ki UPI kaise kaam karta hai"). '
@@ -143,7 +156,25 @@ Check and fix: (1) the first 7 words hook hard, no greetings; (2) length fits th
 by the FACTS/notes, never invent numbers or quotes; (4) narration is natural spoken {lang}, grammatical, punchy, no awkward repetition;
 (5) on-screen text is short, correct and in {lang}; (6) every cue word appears in its own scene's "say" text; (7) no absolute claims
 (always, never, guaranteed, zero) unless strictly true; (8) keep it visual: keep picture scenes (photo, gallery, chart, flow, icons, versus, map),
-never turn them into text, and remove any chart figure not supported by the FACTS/notes. If everything is already good, return it unchanged."""
+never turn them into text, and remove any chart figure not supported by the FACTS/notes; (9) FACT CHECK every number, date, name and
+claim against the FACTS/notes: keep it if supported or well known, otherwise remove it or say it without the number; (10) remove any
+AI-sounding phrase ("game-changer", "delve", "unlock", "in today's world"...) and anything a real person would never say out loud;
+(11) keep the story structure, the scene order and the opening scene as they are; keep the mini-hooks and the loop ending.
+If everything is already good, return it unchanged."""
+
+HOOKS = """You are the head writer of a viral short-video channel. For the topic below, plan ONE video in the given story style.
+Return ONLY JSON: {"angle":"<the one surprising angle this video takes, 1 sentence>",
+ "hooks":[5 different opening lines in {lang}, 6-14 words each, each a different kind: a surprising number, a bold claim, a question,
+          "most people think X, but...", a vivid tiny scene],
+ "best":<index 0-4 of the hook most likely to stop a scroll: specific, surprising, easy to picture, true to the FACTS>,
+ "beats":[4-7 short beats in English following the story style, each naming the visual (e.g. "funnel: 1,000 apply -> 3 hired")]}
+Use only facts from FACTS/notes or well-known stable facts. No greetings, no clickbait lies."""
+
+JUDGE = """You judge short-video scripts. Score each draft 1-10 on: HOOK (do the first words stop a scroll?), STORY (tension that
+builds and pays off, not a list of facts), SPECIFIC (concrete numbers, names, examples), SPOKEN (sounds like a real person talking;
+no AI phrases), VISUAL (each scene shows something different and fitting), TRUE (nothing that looks invented).
+Return ONLY JSON: {"scores":[{"draft":1,"hook":0,"story":0,"specific":0,"spoken":0,"visual":0,"true":0,"total":0}, ...],
+"best":<draft number>, "why":"<one sentence>"}"""
 
 DIGEST_SYSTEM = """You are an expert video producer. The user gave text that may be a short topic, or a pasted job post, flyer, announcement,
 press release, article or notes. Return ONLY JSON:
@@ -369,6 +400,11 @@ def validate(cfg, opts):
                                   "show the rest as spotlight, photo, gallery, flow, icons, chart, kpis, pictogram, versus, map or reveal.")
         if pics < max(2, -(-3 * len(body) // 4)): errs.append(f"Only {pics} of {len(body)} scenes are pictures. At least three quarters must be picture scenes.")
         if body and body[0].get("type") not in PICTURE: errs.append('Scene 1 must be a picture: a "spotlight" or a "photo".')
+    bad = STORY.ai_phrases(cfg)
+    if bad: errs.append(f"Sounds machine-written: remove or reword {', '.join(repr(b) for b in bad[:6])}. Say it the way a person would.")
+    if opts.get("script"):   # the visuals step must keep the finished narration word for word
+        r = narration_match(cfg, opts["script"])
+        if r < 0.85: errs.append(f"The narration changed ({r:.0%} the same). Keep the FINAL SCRIPT word for word, in order; only split it into scenes.")
     n = sum(count_units(spoken(s), lang) for s in sc if isinstance(s, dict))
     lo, hi = word_range(duration, lang)
     unit = "characters" if LANG.no_spaces(lang) else "words"
@@ -431,11 +467,13 @@ def tidy(cfg, opts):
     cfg["music"] = opts.get("music") or (cfg.get("music") if cfg.get("music") in ("upbeat", "calm", "dramatic", "tech", "news") else "upbeat")
     cfg["subtitles"] = opts.get("subtitles") or "kinetic"
     if opts.get("pace"): cfg["pace"] = opts["pace"]
+    if str(opts.get("music_volume") or "").lower() in ("off", "low", "medium", "high"): cfg["music_volume"] = opts["music_volume"].lower()
+    if str(opts.get("music") or "").lower() in ("off", "no", "none"): cfg["music"] = "none"
     if opts.get("transition") in ("wipe", "flash", "none"): cfg["transition"] = opts["transition"]
     if opts.get("formats"): cfg["formats"] = [f.strip() for f in str(opts["formats"]).split(",") if f.strip() in ("16:9", "1:1", "4:5")]
     if not isinstance(cfg.get("images"), dict): cfg["images"] = {}
     if opts.get("sources"): cfg["sources"] = opts["sources"]
-    order = ["company", "url", "logo", "language", "voice", "theme", "music", "subtitles", "pace", "transition", "formats", "colors", "images", "sources", "scenes"]
+    order = ["company", "url", "logo", "language", "voice", "theme", "music", "music_volume", "subtitles", "pace", "transition", "formats", "colors", "images", "sources", "story", "scenes"]
     return {k: cfg[k] for k in order if k in cfg}
 
 
@@ -581,6 +619,7 @@ def user_prompt(topic, notes, facts, opts):
     unit = "characters" if LANG.no_spaces(lang) else "words"
     lo_n, hi_n = scene_limits(opts["duration"])
     rule = LANG_RULES["en"] if LANG.base(lang) == "en" and lang != "hinglish" else LANG_RULES["hinglish"] if lang == "hinglish" else \
+        LANG_RULES["hi"] if lang == "hi" else \
         LANG_RULES["other"].format(name=LANG.name(lang), nospace=" (a 2-4 character piece of it)" if LANG.no_spaces(lang) else "")
     fmt = opts.get("format") or "auto"
     dom = topic_domain(topic)
@@ -594,44 +633,209 @@ def user_prompt(topic, notes, facts, opts):
     if notes: p.append(f"CREATOR NOTES (must be used, every fact kept):\n{notes[:3500]}")
     if facts: p.append(f"FACTS from research (use for numbers, dates and quotes; do not invent others):\n{facts[:3200]}")
     if dom: p.append(f'This topic names the website {dom}: include a "website" scene with "url":"{dom}" after the intro and set images.logo_domain to "{dom}".')
+    if opts.get("script"):
+        p.append("FINAL SCRIPT (already researched, written and fact-checked; one item per line):\n" + "\n".join(opts["script"]))
+        p.append("YOUR JOB: turn this script into the video JSON. Keep every sentence word for word and in order (in \"say\", only write "
+                 "numbers and names the way they are spoken, as the language rule says, with the written form in \"sub\"). Group the lines "
+                 "into scenes; scene 1 is the hook. For each scene pick the visual that SHOWS what its lines say (a number -> number/chart, "
+                 "a process -> flow, a place -> map, a share of people -> pictogram, examples -> gallery/icons, a change -> reveal...). "
+                 "Vary the scene types.")
+        p.append("Example scenes (format and quality only; never copy their content):\n" + "\n".join(opts.get("examples") or []))
     p.append("Write the video JSON now.")
     return "\n\n".join(p)
 
 
-def write_script(topic, notes="", opts=None, key=None, tries=3):
-    opts = dict(opts or {})
-    opts.setdefault("lang", "en"); opts.setdefault("duration", "standard")
-    key = key or os.environ.get("GROQ_API_KEY")
-    if not key: sys.exit("Set the GROQ_API_KEY environment variable (a GitHub secret in Actions).")
-    topic, notes, fmt = digest(topic, notes, key)
-    if fmt and (opts.get("format") in (None, "", "auto")): opts["format"] = fmt
-    facts, sources = ("", [])
-    if opts.get("research", True):
-        facts, sources = RS.research(topic + (" " + notes[:200] if notes and len(topic) < 30 else ""), notes, opts["lang"])
-    opts["sources"] = sources
+MINOR = ("cue", "Total spoken", "are pictures", "Too much text", "must be a picture", "Sounds machine-written")
+
+SCRIPT = """You are one of the best short-video scriptwriters (Reels, Shorts, TikTok). From the RESEARCH BRIEF, write ONE proper
+voiceover script: a real story told by a person, not a list of facts. Return ONLY JSON:
+{"hooks":[5 different opening lines, each 6-14 words: a surprising number, a bold claim, a question, "most people think X, but...",
+          a vivid tiny scene],
+ "best":<index of the hook most likely to stop a scroll: specific, surprising, easy to picture, true>,
+ "title":"<4-8 word title>",
+ "script":["<one sentence (or two very short ones) per item, in order, starting with the chosen hook>", ...]}
+
+STRUCTURE (always):
+1. HOOK: the chosen hook. No greeting, no "in this video", no name-dropping first.
+2. WHY IT MATTERS: connect it to the viewer's own life in one or two lines.
+3. THE CORE: explain it in 2-3 clear steps; each step carries one concrete fact from the brief (a number with its year, a name,
+   a place, a real example).
+4. THE TWIST: "But here's the catch..." / "Now the surprising part..." with the most surprising fact from the brief.
+5. THE PAYOFF: what it means for the viewer: one clear takeaway.
+6. THE CLOSE: a last line that ties back to the hook, so a replay feels seamless.
+
+WRITING:
+- Write for the ear, like a smart friend talking: contractions, short sentences mixed with a few longer ones, one idea per sentence.
+- Every 8-10 seconds a short line that pulls the viewer forward. Never the same one twice.
+- Specific beats vague: real numbers, names, places, everyday examples. Every fact must come from the brief (or be very well known).
+  Skip anything the brief marks as uncertain.
+- Never sound like an AI: no "in today's world", "game-changer", "delve", "dive into", "unlock", "unleash", "revolutionize",
+  "seamless", "cutting-edge", "landscape", "realm", "moreover", "furthermore", "in conclusion", "leverage", "robust", "stay tuned",
+  "buckle up", "let's explore".
+- Numbers in digits in the script (they're read aloud correctly later)."""
+
+FACTCHECK = """You are the fact-checker and final editor of this voiceover script. Compare EVERY claim (numbers, years, names, places,
+"first/biggest/only" claims, how things work) with the RESEARCH BRIEF. Return ONLY JSON:
+{"script":["<the corrected script, one item per line, same order>"], "changes":["<what you fixed and why>", ...]}
+Rules: keep a claim if the brief supports it or it's very well known; fix it if the brief says otherwise; remove it (or say it without the
+number) if the brief doesn't support it. Also remove AI-sounding phrases and anything a person wouldn't say out loud. Keep the story,
+the structure, the hook, the length and the voice. If everything is right, return the script unchanged with "changes": []."""
+
+JUDGE_TEXT = """You judge short-video voiceover scripts. Score each 1-10 on: HOOK (do the first words stop a scroll?), STORY (builds and
+pays off, not a list), CLEAR (easy to follow when heard once), SPECIFIC (concrete numbers, names, examples), SPOKEN (sounds like a real
+person; no AI phrases), TRUE (nothing that looks invented compared with the brief).
+Return ONLY JSON: {"scores":[{"draft":1,"total":0}, ...], "best":<draft number>, "why":"<one sentence>"}"""
+
+LAST = {}   # the finished script text and research of the last write_script() call (saved next to video.json)
+
+
+def script_lang(lang):
+    if lang == "hinglish": return ('Write in Hinglish: Hindi in Latin script mixed with English, the way Indian creators talk '
+                                   '("Aaj hum dekhenge ki UPI kaise kaam karta hai").')
+    if lang == "hi": return LANG_RULES["hi"].split(" Numbers in")[0] + "."
+    if LANG.base(lang) == "en": return "Write in natural spoken English."
+    return f"Write in natural, everyday spoken {LANG.name(lang)} in its normal script; write it directly, never translate from English."
+
+
+def _words(text):
+    return [w for w in re.findall(r"[^\W\d_]+", text.lower())]
+
+
+def narration_match(cfg, script):
+    """How much of the finished script's wording the scenes kept (0-1), ignoring numbers and how they're spelled out."""
+    said = " ".join((ln.get("sub") or ln.get("say") or "") for s in cfg.get("scenes", []) if isinstance(s, dict)
+                    for ln in s.get("lines", []) if isinstance(ln, dict))
+    a, b = _words(" ".join(script)), _words(said)
+    if not a: return 1.0
+    import difflib
+    return difflib.SequenceMatcher(None, a, b, autojunk=False).ratio()
+
+
+def _llm_json(key):
+    return lambda msgs, max_out=2000: parse_json(call_groq(msgs, key, temperature=0.3, effort="low", max_out=max_out))
+
+
+def write_text_script(topic, notes, facts, opts, key):
+    """Research brief -> one proper voiceover script (best of 5 hooks, 2 drafts judged, then fact-checked). Returns [lines]."""
+    lang = opts["lang"]
+    lo, hi = word_range(opts["duration"], lang)
+    unit = "characters" if LANG.no_spaces(lang) else "words"
+    brief = (f"RESEARCH BRIEF:\n{facts}" if facts else "RESEARCH BRIEF: (no sources were reachable; use only very well-known facts)")
+    user = "\n\n".join(x for x in [
+        f"TOPIC: {topic}",
+        f"LANGUAGE: {LANG.name(lang)}. {script_lang(lang)}",
+        f"LENGTH: {lo}-{hi} spoken {unit} in total ({DURATIONS[opts['duration']][0]}-{DURATIONS[opts['duration']][1]} seconds).",
+        f"FOCUS: {FORMATS.get(opts.get('format') or 'auto', FORMATS['auto'])}.",
+        f"TONE: {opts.get('tone') or 'energetic'}." + (f" AUDIENCE: {opts['audience']}." if opts.get("audience") else ""),
+        f"CREATOR NOTES (must be used, every fact kept):\n{notes[:3500]}" if notes else "",
+        brief, "Write the script now."] if x)
+    n = max(1, min(3, int(os.environ.get("SCRIPT_DRAFTS", "2"))))
+    drafts = []
+    for k in range(n):
+        for attempt in range(2):
+            try:
+                d = parse_json(call_groq([{"role": "system", "content": SCRIPT}, {"role": "user", "content": user}], key,
+                                         temperature=0.6 if k == 0 else 0.9, effort="medium", max_out=2600))
+                lines = [str(x).strip() for x in d.get("script", []) if str(x).strip()]
+                hooks = d.get("hooks") or []
+                bi = d.get("best") if isinstance(d.get("best"), int) and 0 <= d.get("best") < len(hooks) else 0
+                if hooks and lines and hooks[bi] and _words(str(hooks[bi]))[:3] != _words(lines[0])[:3]:
+                    lines.insert(0, str(hooks[bi]).strip())     # make sure the chosen hook opens the script
+                words = sum(count_units(x, lang) for x in lines)
+                if lines and (lo * 0.8 <= words <= hi * 1.1 or (attempt == 1 and words >= lo * 0.6)):
+                    drafts.append(lines); log(f"draft {k + 1}: {len(lines)} lines, {words} {unit}; hook: {lines[0][:90]}"); break
+                msgs_fix = f"\n\nYour last script was {words} {unit}. It MUST be {lo}-{hi} {unit}: " + ("cut it down." if words > hi else "add to it.")
+                user = user.split("\n\nYour last script was")[0] + msgs_fix
+            except SystemExit:
+                raise
+            except Exception as e:
+                log(f"draft {k + 1} failed ({str(e)[:80]})")
+    if not drafts: return None
+    best = drafts[0]
+    if len(drafts) > 1:
+        body = "\n\n".join(f"DRAFT {i + 1}:\n" + "\n".join(d) for i, d in enumerate(drafts))
+        try:
+            j = parse_json(call_groq([{"role": "system", "content": JUDGE_TEXT},
+                                      {"role": "user", "content": (f"RESEARCH BRIEF:\n{facts[:2500]}\n\n" if facts else "") + body}],
+                                     key, temperature=0.1, effort="low", max_out=700))
+            bi = int(j.get("best", 1)) - 1
+            if 0 <= bi < len(drafts): best = drafts[bi]
+            log(f"judge: draft {bi + 1} is stronger ({str(j.get('why', ''))[:140]})")
+        except SystemExit:
+            raise
+        except Exception as e:
+            log(f"judge skipped ({str(e)[:80]})")
+    try:
+        fc = parse_json(call_groq([{"role": "system", "content": FACTCHECK},
+                                   {"role": "user", "content": f"{brief}\n\nSCRIPT:\n" + "\n".join(best)}], key, temperature=0.1, effort="medium", max_out=2600))
+        fixed = [str(x).strip() for x in fc.get("script", []) if str(x).strip()]
+        if fixed and sum(count_units(x, lang) for x in fixed) >= lo * 0.6:
+            for c in (fc.get("changes") or [])[:8]: log(f"fact check: {str(c)[:150]}")
+            if not fc.get("changes"): log("fact check: everything matches the research")
+            best = fixed
+    except SystemExit:
+        raise
+    except Exception as e:
+        log(f"fact check skipped ({str(e)[:80]})")
+    return best
+
+
+def _draft(topic, notes, facts, opts, key, tries, temperature):
+    """The video JSON: write, check, and send it back to the AI with the problems until it passes (or only minor ones are left)."""
     msgs = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user_prompt(topic, notes, facts, opts)}]
     cfg, last_errs = None, []
     for attempt in range(1, tries + 1):
-        raw = call_groq(msgs, key, effort="medium" if attempt == 1 else "low")
+        raw = call_groq(msgs, key, temperature=temperature, effort="medium" if attempt == 1 else "low")
         try:
             cfg = parse_json(raw)
             if opts.get("visual", True): cfg = visualize(cfg)   # text-heavy scenes become pictures before checking
             errs = validate(cfg, opts)
         except Exception as e:
             cfg, errs = None, [f"Output was not valid JSON ({e}). Return only the JSON object."]
-        log(f"attempt {attempt}: {'ok' if not errs else str(len(errs)) + ' issue(s)'}")
-        if not errs:
-            cfg = review(cfg, key, opts, facts); break
+        log(f"  attempt {attempt}: {'ok' if not errs else str(len(errs)) + ' issue(s)'}")
+        if not errs: return cfg, []
         for e in errs[:10]: print("   -", e, flush=True)
         last_errs = errs
         draft = json.dumps(cfg, ensure_ascii=False, separators=(",", ":")) if cfg else raw[:6000]
         msgs = [{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": user_prompt(topic, notes, facts[:1500], opts) + f"\n\nYOUR DRAFT:\n{draft}\n\nFix these problems and return the full corrected JSON only:\n- " + "\n- ".join(errs)}]
+    if cfg and all(any(m in e for m in MINOR) for e in last_errs): return cfg, last_errs
+    return None, last_errs
+
+
+def write_script(topic, notes="", opts=None, key=None, tries=3):
+    """Topic -> research brief -> one proper voiceover script -> visuals for every line -> video.json."""
+    opts = dict(opts or {})
+    opts.setdefault("lang", "en"); opts.setdefault("duration", "standard")
+    key = key or os.environ.get("GROQ_API_KEY")
+    if not key: sys.exit("Set the GROQ_API_KEY environment variable (a GitHub secret in Actions).")
+    topic, notes, fmt = digest(topic, notes, key)
+    if fmt and (opts.get("format") in (None, "", "auto")): opts["format"] = fmt
+    LAST.clear()
+    facts, sources = "", []
+    if opts.get("research", True):
+        log("researching...")
+        facts, sources, md = RS.research(topic + (" " + notes[:200] if notes and len(topic) < 30 else ""), notes, opts["lang"],
+                                         llm=_llm_json(key), key=key)
+        LAST["research"] = md
+    opts["sources"] = sources
+    log("writing the script...")
+    script = write_text_script(topic, notes, facts, opts, key)
+    if script:
+        LAST["script"] = script
+        opts["script"] = script
+        import random
+        opts["examples"] = random.Random(topic).sample(STORY.EXAMPLES[:-1], 4) + [STORY.EXAMPLES[-1]]
     else:
-        minor = ("cue", "Total spoken", "are pictures", "Too much text", "must be a picture")
-        if not (cfg and all(any(m in e for m in minor) for e in last_errs)):
-            sys.exit("The model could not produce a valid script. Try rewording the topic or adding --notes.")
-        log("accepting with minor issues (missed cues use estimated timing)")
+        log("could not write a separate script; writing the video directly")
+    log("adding the visuals...")
+    cfg, errs = _draft(topic, notes, facts, opts, key, tries, 0.4)
+    if not cfg and script:   # last resort: let the model adjust the wording too
+        log("the visuals step struggled to keep the script word for word; allowing small wording changes")
+        opts.pop("script", None); opts["script_hint"] = script
+        cfg, errs = _draft(topic, notes + "\n\nUse this finished script as closely as possible:\n" + "\n".join(script), facts, opts, key, 2, 0.4)
+    if not cfg:
+        sys.exit("The model could not produce a valid script. Try rewording the topic or adding --notes.\n- " + "\n- ".join(errs[:6]))
     if opts.get("visual", True): cfg = visualize(cfg)
     return apply_website_rule(tidy(cfg, opts), topic_domain(topic), opts["lang"])
 
@@ -639,6 +843,7 @@ def write_script(topic, notes="", opts=None, key=None, tries=3):
 def review(cfg, key, opts, facts):
     """Second pass: an editor checks facts, narration and on-screen text. Keeps the draft if the edit is worse."""
     cur, extra = cfg, ""
+    base = validate(cfg, opts)
     for _ in range(2):
         msgs = [{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": REVIEW.format(lang=LANG.name(opts["lang"])) + extra +
@@ -650,7 +855,7 @@ def review(cfg, key, opts, facts):
             errs = validate(new, opts)
         except Exception as e:
             new, errs = None, [f"invalid JSON ({e})"]
-        if not errs:
+        if not errs or (all(any(m in e for m in MINOR) for e in errs) and len(errs) <= len(base)):
             log("editor pass: ok"); return new
         if new: cur = new
         extra = "\nAlso fix these problems:\n- " + "\n- ".join(errs)
@@ -743,15 +948,19 @@ def main():
     ap.add_argument("--options", default="", help='extra options as "key=value; key=value" (used by the GitHub workflow)')
     a = ap.parse_args()
     opts = {"lang": a.lang, "voice": a.voice, "format": a.format, "duration": a.duration, "tone": a.tone, "audience": a.audience,
-            "theme": a.theme, "music": a.music, "subtitles": a.subtitles, "pace": a.pace, "research": not a.no_research, "visual": not a.text_style, "transition": "", "formats": ""}
+            "theme": a.theme, "music": a.music, "subtitles": a.subtitles, "pace": a.pace, "research": not a.no_research, "visual": not a.text_style, "transition": "", "formats": "",
+            "voice_quality": "", "music_volume": ""}
     for part in re.split(r"[;\n]", a.options or ""):
         if "=" in part:
             k, v = part.split("=", 1); k, v = k.strip().lower(), v.strip()
             if k in ("research", "visual"): opts[k] = v.lower() not in ("no", "false", "off", "0", "text")
+            elif k == "logo" and v: a.logo = v
             elif k in opts and v: opts[k] = v
     opts["lang"] = LANG.norm_code(opts["lang"] or LANG.looks_like(a.topic))
+    if a.folder: opts["folder"] = slugify(a.folder)
     if opts["duration"] not in DURATIONS: opts["duration"] = "standard"
     if opts["format"] not in FORMATS: opts["format"] = "auto"
+    if opts.get("voice_quality") in ("fast", "natural"): os.environ["VOICE_QUALITY"] = opts["voice_quality"]
     v = opts.get("voice") or ""
     if v in ("", "auto", "female", "male"):   # turn the choice into a concrete voice for this language
         f, m = LANG.defaults(opts["lang"]); opts["voice"] = m if v == "male" else f
@@ -764,6 +973,9 @@ def main():
     if a.site_photos: cfg.setdefault("images", {})["site_photos"] = True
     os.makedirs(vdir, exist_ok=True)
     json.dump(cfg, open(os.path.join(vdir, "video.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    if LAST.get("research"): open(os.path.join(vdir, "research.md"), "w", encoding="utf-8").write(LAST["research"])
+    if LAST.get("script"):   # the script as written and fact-checked (the video speaks the "say" lines in video.json)
+        open(os.path.join(vdir, "script.txt"), "w", encoding="utf-8").write("\n".join(LAST["script"]) + "\n")
     n = sum(count_units(spoken(s), opts["lang"]) for s in cfg["scenes"])
     log(f"{cfg['company']}: {len(cfg['scenes'])} scenes ({', '.join(s['type'] for s in cfg['scenes'])}), {n} {'characters' if LANG.no_spaces(opts['lang']) else 'words'}")
     gh = os.environ.get("GITHUB_OUTPUT")

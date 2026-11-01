@@ -4,7 +4,9 @@
               Voices can be blended: "blend": {"af_heart": 0.6, "af_bella": 0.4}.
   edge        Microsoft Edge neural voices: 320+ voices in 75 languages, exact word timings. Needs internet.
   piper       178 offline voices in ~50 languages (downloaded once from Hugging Face).
-  chatterbox  Expressive voice with cloning from a short .wav ("reference"); English + 22 languages. Slow on CPU.
+  chatterbox  The most human-sounding voices (Resemble AI, MIT licence). English uses Chatterbox Turbo, Hindi a dedicated
+              Hindi model, 21 more languages Chatterbox Multilingual V3. Voices are real people (CC0 voice donations,
+              engine/data/voices/) or YOUR voice: put a 10-20 s recording in voices/<name>.wav and use "chatterbox:<name>".
 
 A voice in video.json can be written three ways:
   "voice": "af_heart"                       -> engine detected from the id
@@ -37,6 +39,11 @@ KOKORO_VOICES = ["af_alloy", "af_aoede", "af_bella", "af_heart", "af_jessica", "
                  "em_santa", "ff_siwis", "hf_alpha", "hf_beta", "hm_omega", "hm_psi", "if_sara", "im_nicola", "jf_alpha",
                  "jf_gongitsune", "jf_nezumi", "jf_tebukuro", "jm_kumo", "pf_dora", "pm_alex", "pm_santa", "zf_xiaobei", "zf_xiaoni",
                  "zf_xiaoxiao", "zf_xiaoyi", "zm_yunjian", "zm_yunxi", "zm_yunxia", "zm_yunyang"]
+VOICE_DIR = os.path.join(ENGINE, "data", "voices")
+REPO = os.path.dirname(ENGINE)
+# Real people who donated their voices under CC0 (Kyutai "Unmute" voice donations). (gender, label)
+HUMAN_VOICES = {"haku": ("F", "Haku"), "bathri": ("F", "Bathri"), "bevi": ("F", "Bevi"), "hkl": ("F", "Hkl"),
+                "a59a": ("M", "Arlo"), "gyroo": ("M", "Gyroo"), "indian_guy": ("M", "Dev (Indian English)"), "7020": ("M", "Baron (deep)")}
 CHATTERBOX_LANGS = {"ar", "da", "de", "el", "en", "es", "fi", "fr", "he", "hi", "it", "ja", "ko", "ms", "nl", "no", "pl", "pt", "ru", "sv",
                     "sw", "tr", "zh"}
 
@@ -83,7 +90,13 @@ def parse_spec(v, lang, named=None):
     spec["engine"] = spec["engine"].lower()
     if spec["engine"] not in ENGINES: raise ValueError(f'unknown voice engine "{spec["engine"]}". Use one of: {", ".join(ENGINES)}')
     if spec["engine"] == "kokoro" and not spec.get("id") and not spec.get("blend"): spec["id"] = "af_heart"
-    if spec["engine"] == "chatterbox": spec.setdefault("id", "default")
+    if spec["engine"] == "chatterbox":
+        spec.setdefault("id", "default")
+        vid = str(spec["id"])
+        if not spec.get("reference") and vid not in ("default", "builtin"):
+            # a bundled human voice, or the creator's own recording: voices/<id>.wav (repo) or <id>.wav next to video.json
+            spec["reference"] = os.path.join(VOICE_DIR, vid.lower() + ".wav") if vid.lower() in HUMAN_VOICES else \
+                (vid if vid.lower().endswith((".wav", ".mp3", ".m4a", ".flac")) else os.path.join("voices", vid + ".wav"))
     spec.setdefault("speed", 1.0)
     spec["lang"] = L.norm_code(spec.get("lang") or lang)
     return spec
@@ -103,7 +116,7 @@ def line_key(text, seed, spec):
         ref = spec.get("reference") or ""
         if ref and os.path.exists(ref): ref = hashlib.sha1(open(ref, "rb").read()).hexdigest()[:12]
         blend = json.dumps(spec.get("blend") or {}, sort_keys=True)
-        raw = "|".join(str(x) for x in (e, spec.get("id"), blend, spec.get("speed", 1), spec.get("pitch", ""), spec["lang"], text, seed,
+        raw = "|".join(str(x) for x in (e if e != "chatterbox" or spec.get("id") == "default" else "chatterbox2", spec.get("id"), blend, spec.get("speed", 1), spec.get("pitch", ""), spec["lang"], text, seed,
                                          spec.get("exaggeration", ""), spec.get("cfg_weight", ""), ref, spec.get("speaker", "")))
     return hashlib.sha1(raw.encode()).hexdigest()[:16]
 
@@ -236,36 +249,107 @@ class Piper:
         return to_float(x), sr, None
 
 
+def _chatterbox_fixes():
+    """Small fixes for chatterbox-tts 0.1.7: float32 reference audio (Turbo) and loading the newer V3 / Hindi checkpoints."""
+    from chatterbox.tts_turbo import ChatterboxTurboTTS
+    if getattr(ChatterboxTurboTTS, "_vs_fixed", False): return
+    nl = ChatterboxTurboTTS.norm_loudness
+    ChatterboxTurboTTS.norm_loudness = lambda self, wav, sr, target_lufs=-27: np.asarray(nl(self, wav, sr, target_lufs), dtype=np.float32)
+    ChatterboxTurboTTS._vs_fixed = True
+
+
+def _load_multilingual(dev, lang):
+    """Chatterbox Multilingual V3, or the dedicated Hindi model for Hindi (both MIT, Resemble AI)."""
+    import torch
+    from huggingface_hub import hf_hub_download
+    from safetensors.torch import load_file
+    from chatterbox.mtl_tts import ChatterboxMultilingualTTS, T3, T3Config, S3Gen, VoiceEncoder, MTLTokenizer, Conditionals
+    B, H = "ResembleAI/chatterbox", "ResembleAI/Chatterbox-Multilingual-hi"
+    hindi = lang == "hi"
+    get = lambda repo, f: hf_hub_download(repo, f)
+    ve = VoiceEncoder(); ve.load_state_dict(torch.load(get(B, "ve.pt"), map_location="cpu", weights_only=True)); ve.to(dev).eval()
+    t3 = T3(T3Config.multilingual())
+    st = load_file(get(H, "t3_hi.safetensors") if hindi else get(B, "t3_mtl23ls_v3.safetensors"))
+    if "model" in st: st = st["model"][0]
+    t3.load_state_dict(st); t3.to(dev).eval()
+    s3 = S3Gen()
+    s3.load_state_dict(torch.load(get(H if hindi else B, "s3gen_v3.pt"), map_location="cpu", weights_only=True), strict=False)  # mel buffers are rebuilt
+    s3.to(dev).eval()
+    tok = MTLTokenizer(get(H if hindi else B, "grapheme_mtl_merged_expanded_v1.json"))
+    conds = Conditionals.load(get(B, "conds.pt"), map_location="cpu").to(dev)
+    return ChatterboxMultilingualTTS(t3, s3, ve, tok, dev, conds=conds)
+
+
+def trim_silence(x, sr, pad=0.06, thr_db=-42):
+    """Cut the silence the model leaves before and after a line (the mix adds natural pauses itself)."""
+    if len(x) < sr // 4: return x
+    hop = int(sr * 0.01); n = len(x) // hop
+    e = 20 * np.log10(np.sqrt(np.mean(x[:n * hop].reshape(n, hop) ** 2, axis=1)) + 1e-9)
+    loud = np.where(e > max(thr_db, e.max() - 45))[0]
+    if not len(loud): return x
+    a = max(0, loud[0] * hop - int(pad * sr)); b = min(len(x), (loud[-1] + 1) * hop + int(pad * sr))
+    return x[a:b]
+
+
 class Chatterbox:
     def __init__(self):
         import torch
         self.torch = torch
         self.dev = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
-        self.models = {}
+        if self.dev == "cpu": torch.set_num_threads(max(1, os.cpu_count() or 1))
+        self.models, self.ref_ready = {}, {}
 
-    def _model(self, multi):
-        if multi not in self.models:
-            if multi:
-                from chatterbox.mtl_tts import ChatterboxMultilingualTTS
-                self.models[multi] = ChatterboxMultilingualTTS.from_pretrained(device=self.dev)
-            else:
+    def _model(self, kind):
+        if kind not in self.models:
+            if self.models:   # keep one Chatterbox model in memory at a time (each is 2-3 GB)
+                import gc
+                self.models.clear(); self.ref_ready.clear(); gc.collect()
+            t0 = time.time()
+            if kind == "legacy-en":
                 from chatterbox.tts import ChatterboxTTS
-                self.models[multi] = ChatterboxTTS.from_pretrained(device=self.dev)
-            log(f"Chatterbox {'multilingual ' if multi else ''}model loaded on {self.dev}")
-        return self.models[multi]
+                self.models[kind] = ChatterboxTTS.from_pretrained(device=self.dev)
+            elif kind == "legacy-mtl":
+                from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+                self.models[kind] = ChatterboxMultilingualTTS.from_pretrained(device=self.dev)
+            elif kind == "turbo":
+                _chatterbox_fixes()
+                from chatterbox.tts_turbo import ChatterboxTurboTTS
+                self.models[kind] = ChatterboxTurboTTS.from_pretrained(device=self.dev)
+            else:
+                self.models[kind] = _load_multilingual(self.dev, "hi" if kind == "hi" else "multi")
+            log(f"Chatterbox {kind} model loaded on {self.dev} ({time.time() - t0:.0f}s)")
+        return self.models[kind]
 
     def say(self, text, spec, seed=42):
         lang = L.base(spec["lang"]); lang = "no" if lang == "nb" else lang
         if lang not in CHATTERBOX_LANGS: raise RuntimeError(f"Chatterbox does not speak '{spec['lang']}'")
-        multi = lang != "en"
-        m = self._model(multi)
-        self.torch.manual_seed(int(seed))
-        kw = {"exaggeration": float(spec.get("exaggeration", 0.6)), "cfg_weight": float(spec.get("cfg_weight", 0.45))}
-        if spec.get("reference"): kw["audio_prompt_path"] = spec["reference"]
-        if multi: kw["language_id"] = lang
-        wav = m.generate(text, **kw)
-        x = wav.squeeze(0).cpu().numpy().astype("float32")
-        return change_speed(x, m.sr, float(spec.get("speed", 1.0))), m.sr, None
+        legacy = spec.get("id") == "default" and not spec.get("model")
+        kind = ("legacy-en" if lang == "en" else "legacy-mtl") if legacy else \
+               ("turbo" if lang == "en" and spec.get("model") != "original" else "legacy-en" if lang == "en" else "hi" if lang == "hi" else "v3")
+        m = self._model(kind)
+        ex = float(spec.get("exaggeration", 0.6 if legacy else 0.55))
+        ref = spec.get("reference")
+        if ref and self.ref_ready.get(kind) != (ref, ex):   # condition on the voice once, not for every line
+            if kind == "turbo": m.prepare_conditionals(ref, exaggeration=0.0)
+            else: m.prepare_conditionals(ref, exaggeration=ex)
+            self.ref_ready[kind] = (ref, ex)
+        words = len(text.split()) if not L.no_spaces(spec["lang"]) else len(text) / 2.5
+        expect = max(1.2, words / 2.6)
+        best = None
+        for attempt in range(3):     # a rare run-on or cut-off take is re-generated with another seed
+            self.torch.manual_seed(int(seed) + 1000 * attempt)
+            if kind == "turbo": wav = m.generate(text, temperature=float(spec.get("temperature", 0.75)))
+            elif kind.startswith("legacy") and lang == "en":
+                wav = m.generate(text, exaggeration=ex, cfg_weight=float(spec.get("cfg_weight", 0.45)), **({"audio_prompt_path": ref} if ref and legacy else {}))
+            else:
+                wav = m.generate(text, language_id=lang, exaggeration=ex, cfg_weight=float(spec.get("cfg_weight", 0.45 if legacy else 0.4)))
+            x = trim_silence(wav.squeeze(0).cpu().numpy().astype("float32"), m.sr)
+            d = len(x) / m.sr
+            ok = 0.45 * expect <= d <= 2.3 * expect + 1.0
+            if best is None or ok: best = x
+            if ok: break
+            log(f"  take {attempt + 1} sounded off ({d:.1f}s for ~{expect:.1f}s of text); trying again")
+        return change_speed(best, m.sr, float(spec.get("speed", 1.0))), m.sr, None
 
 
 _engines = {}
@@ -293,6 +377,11 @@ def fallback_spec(spec):
     lang = spec["lang"]
     female = True
     vid = str(spec.get("id", ""))
+    if spec["engine"] == "chatterbox":
+        female = HUMAN_VOICES.get(vid.lower(), ("F",))[0] == "F"
+        f, m = L.defaults(lang, natural=False)
+        choice = parse_spec(f if female else m, lang); choice["speed"] = spec.get("speed", 1.0)
+        return choice
     if spec["engine"] == "kokoro" and len(vid) > 1: female = vid[1] == "f"
     elif spec["engine"] == "edge":
         g = next((v["gender"] for v in L.edge_voices() if v["id"] == vid), "F"); female = g == "F"
@@ -320,8 +409,11 @@ def make_voice(vdir, lines, specs, skip_voice=False):
     cache = os.path.join(vdir, ".voice"); os.makedirs(cache, exist_ok=True)
     specs = [dict(s) for s in specs]
     for s in specs:
-        if s.get("reference") and not os.path.isabs(s["reference"]): s["reference"] = os.path.join(vdir, s["reference"])
-        if s.get("reference") and not os.path.exists(s["reference"]): raise SystemExit(f'voice reference "{s["reference"]}" not found')
+        if s.get("reference") and not os.path.isabs(s["reference"]):
+            cands = [os.path.join(vdir, s["reference"]), os.path.join(REPO, s["reference"]), os.path.join(vdir, os.path.basename(s["reference"]))]
+            s["reference"] = next((c for c in cands if os.path.exists(c)), cands[0])
+        if s.get("reference") and not os.path.exists(s["reference"]):
+            raise SystemExit(f'voice "{s.get("id")}": recording "{s["reference"]}" not found. Put a 10-20 s .wav of the voice in voices/ (repo) or next to video.json.')
     # a voice that can't speak the language is swapped up front for every line that uses it
     for s in specs:
         if not can_speak(s):
@@ -382,6 +474,9 @@ def catalog(lang=None):
     out = []
     lc = L.norm_code(lang) if lang else None
     def ok(locale): return not lc or locale.lower().startswith(L.base(lc)) or (lc == "hinglish" and locale.lower().startswith(("en-in", "hi")))
+    for vid, (g, label) in HUMAN_VOICES.items():
+        for loc in ("en-US", "hi-IN") if vid in ("indian_guy", "bathri") else ("en-US",):
+            if ok(loc): out.append({"engine": "chatterbox", "id": vid, "label": label + " (human-like)", "gender": g, "locale": loc})
     for v in KOKORO_VOICES:
         loc = {"a": "en-US", "b": "en-GB", "e": "es", "f": "fr", "h": "hi", "i": "it", "p": "pt-BR", "j": "ja", "z": "zh"}[v[0]]
         if ok(loc): out.append({"engine": "kokoro", "id": v, "label": v.split("_")[1].title(), "gender": v[1].upper(), "locale": loc})

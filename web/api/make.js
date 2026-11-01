@@ -8,6 +8,8 @@ const CHOICES = {
   tone: ["energetic", "friendly", "professional", "dramatic", "funny", "calm", "inspirational", "authoritative", "casual"],
   theme: ["light", "dark"],
   music: ["upbeat", "calm", "dramatic", "tech", "news", "none"],
+  music_volume: ["low", "medium", "high"],
+  voice_quality: ["natural", "fast"],
   subtitles: ["kinetic", "bold", "karaoke", "classic", "none"],
   pace: ["fast", "normal", "relaxed"],
 };
@@ -31,12 +33,14 @@ module.exports = async (req, res) => {
   }
   if (b.research === false) opts.push("research=no");
   if (b.visual === false) opts.push("visual=no");
+  if (logo) opts.push(`logo=${logo}`);
   try {
     const out = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, {
       method: "POST",
       body: JSON.stringify({
         ref: "main",
-        inputs: { topic, notes, logo, language, voice, options: opts.join("; "),
+        inputs: { topic, notes, language, voice, options: opts.join("; "),
+                  background_music: String(b.music) === "none" ? "off" : ({ low: "soft", medium: "medium", high: "loud" }[String(b.music_volume)] || "soft"),
                   site_photos: b.site_photos ? "true" : "false", video: "", requested_by: user },
         return_run_details: true,
       }),

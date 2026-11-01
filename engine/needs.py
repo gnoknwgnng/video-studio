@@ -12,6 +12,7 @@ def main(vdir):
     cfg = json.load(open(os.path.join(vdir, "video.json"), encoding="utf-8"))
     lines = [ln for s in cfg.get("scenes", []) for ln in s.get("lines", [])]
     text = " ".join(ln.get("say", "") for ln in lines)
+    if cfg.get("voice_quality") in ("fast", "natural"): os.environ["VOICE_QUALITY"] = cfg["voice_quality"]
     lang = L.norm_code(cfg.get("language") or L.looks_like(text))
     named = cfg.get("voices") or {}
     specs = [VO.parse_spec(ln.get("voice") or cfg.get("voice"), lang, named) for ln in lines]
