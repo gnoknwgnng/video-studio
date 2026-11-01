@@ -9,6 +9,8 @@
 Steps: (1) understand the input (pasted posts are digested into facts), (2) research current facts
 (Tavily if TAVILY_API_KEY is set, Wikipedia always), (3) draft, (4) automatic checks sent back to the model
 until they pass, (5) an editor pass for facts, grammar and flow. Writes videos/<folder>/video.json.
+
+  python engine/write_script.py --upgrade videos/docsdocs   # rewrite an existing script picture-first (keeps facts + voice lines)
 """
 import argparse, json, os, re, sys, time, urllib.error, urllib.request
 
@@ -27,22 +29,23 @@ TYPES = ["spotlight", "photo", "gallery", "chart", "flow", "icons", "versus", "m
 PICTURE = {"photo", "gallery", "chart", "flow", "icons", "versus", "map", "broll", "number", "stats", "presenter", "website",
            "pictogram", "kpis", "bubbles", "gauge", "funnel", "cycle", "chat", "reveal", "spotlight"}
 TEXT_LED = {"hook", "question", "quote", "compare", "flip"}
+SUPPORT = {"problem", "intro", "steps", "timeline", "list"}   # text-heavy layouts; visualize() turns them into picture scenes
 CHART_KINDS = ("bar", "column", "line", "donut", "pie")
 ICONS = ["document", "tooth", "heart", "shield", "building", "box", "chip", "phone", "globe", "rocket", "bulb", "bag", "user",
          "briefcase", "lock", "chart", "leaf", "book", "home", "cap", "mail", "chat", "bolt", "cloud", "cross", "coin"]
 FORMATS = {
     "auto": "choose the best structure for the topic, picture scenes first",
-    "explainer": "photo or hook -> flow (how it works) -> gallery or icons -> chart or number -> versus -> end",
-    "product": "problem -> number or chart -> intro -> website (if it has one) -> flow -> versus -> end",
-    "listicle": "photo or hook -> list (icon + image_query on every item) or gallery or icons -> chart or number -> end",
-    "news": "photo -> map (where it happened) -> timeline -> chart or number -> icons (what it means) -> end",
-    "story": "photo -> timeline (image_query on events) -> map -> quote (only if real) -> number -> end",
-    "tutorial": "hook or photo -> flow (the steps) -> icons (mistakes to avoid) -> end",
-    "comparison": "hook -> versus -> chart (bar or column) -> compare -> end",
-    "hiring": "problem (kicker \"We're hiring\", cards = the roles with icons) -> intro (the employer) -> icons (perks) -> steps (pay, location) -> map (if locations) -> end (how to apply)",
-    "pitch": "presenter -> problem -> number -> flow -> versus -> end (the ask)",
-    "motivational": "photo -> quote (only if real) -> icons -> broll -> end",
-    "announcement": "hook -> intro -> gallery or icons (what's new) -> chart or number -> end (call to action)",
+    "explainer": "spotlight or photo -> flow (how it works) -> gallery or icons -> chart or number -> versus -> end",
+    "product": "spotlight (mood bad: the pain) -> number or chart -> spotlight or gallery (the product) -> website (if it has one) -> flow -> versus -> end",
+    "listicle": "photo or spotlight -> gallery (photos) or icons -> chart, kpis or number -> icons -> end",
+    "news": "photo -> map (where it happened) -> chart or number -> flow (what happened) -> icons (what it means) -> end",
+    "story": "photo -> map -> flow (the turning points) -> number or chart -> reveal (before/after) -> end",
+    "tutorial": "photo or spotlight -> flow (the steps) -> icons (mistakes to avoid) -> reveal or versus -> end",
+    "comparison": "spotlight or photo -> versus -> chart (bar or column) -> bubbles or kpis -> end",
+    "hiring": "spotlight (kicker \"We're hiring\", satellites = the roles) -> gallery (the workplace) -> icons (perks) -> kpis (pay, openings) -> map (if locations) -> end (how to apply)",
+    "pitch": "presenter -> spotlight (mood bad: the problem) -> number -> flow -> versus -> end (the ask)",
+    "motivational": "photo -> spotlight -> icons -> broll -> end",
+    "announcement": "spotlight (mood good) -> gallery or icons (what's new) -> chart, kpis or number -> flow -> end (call to action)",
 }
 DURATIONS = {"short": (20, 35), "standard": (35, 55), "long": (60, 100)}
 TONES = ["energetic", "friendly", "professional", "dramatic", "funny", "calm", "inspirational", "authoritative", "casual"]
@@ -97,7 +100,7 @@ Supporting scenes (keep few):
 "image_query" = 3-6 plain English words naming a concrete, photographable thing (no text, logos, abstract ideas or famous people).
 
 SHOW, DON'T WRITE (most important):
-- At least two thirds of the scenes are PICTURE scenes; at most 2 of hook/question/quote/compare/flip.
+- At least three quarters of the scenes are PICTURE scenes; at most ONE "supporting" scene in the whole video.
 - Open with a picture, not a sentence: a "spotlight" (mood "bad" for a problem hook) or a "photo". Use "hook" only when a line of text is the point.
 - Keep on-screen words to a minimum: titles are optional in picture scenes; let icons, photos and numbers carry the meaning.
 - Numbers -> chart or number scene. A series of numbers -> chart. Several key figures -> kpis. A share of people -> pictogram.
@@ -358,11 +361,14 @@ def validate(cfg, opts):
             if s.get(k) and s[k].strip() != comp: errs.append(f'Scene {i}: "{k}" must be exactly the company name "{comp}".')
     real = [s for s in sc if isinstance(s, dict)]
     textled = sum(1 for s in real if s.get("type") in TEXT_LED)
-    pics = sum(1 for s in real if s.get("type") in PICTURE or any(isinstance(x, dict) and (x.get("image_query") or x.get("icon"))
-                                                                  for k in ("steps", "items", "events", "cards") for x in s.get(k) or []))
+    body = [s for s in real if s.get("type") != "end"]
+    pics = sum(1 for s in body if s.get("type") in PICTURE)
+    wordy = sum(1 for s in body if s.get("type") in TEXT_LED | SUPPORT)
     if opts.get("visual", True):
-        if textled > max(2, len(real) // 3): errs.append(f"Too much text: {textled} text-led scenes (hook/question/quote/compare/flip). Use at most 2; turn the rest into photo, gallery, chart, flow, icons, versus or map scenes.")
-        if pics < max(2, (2 * (len(real) - 1)) // 3): errs.append(f"Only {pics} picture scenes out of {len(real)}. Show more: use photo, gallery, chart, flow, icons, versus or map scenes, and icons/image_query on items.")
+        if wordy > 1: errs.append(f"Too much text: {wordy} text scenes (hook/question/quote/compare/flip/problem/intro/steps/timeline/list). Use at most 1; "
+                                  "show the rest as spotlight, photo, gallery, flow, icons, chart, kpis, pictogram, versus, map or reveal.")
+        if pics < max(2, -(-3 * len(body) // 4)): errs.append(f"Only {pics} of {len(body)} scenes are pictures. At least three quarters must be picture scenes.")
+        if body and body[0].get("type") not in PICTURE: errs.append('Scene 1 must be a picture: a "spotlight" or a "photo".')
     n = sum(count_units(spoken(s), lang) for s in sc if isinstance(s, dict))
     lo, hi = word_range(duration, lang)
     unit = "characters" if LANG.no_spaces(lang) else "words"
@@ -443,6 +449,85 @@ def topic_domain(topic):
     """The website named in the topic, e.g. 'Tell me about vcfriend.online' -> 'vcfriend.online' (else '')."""
     m = DOMAIN_RE.search(re.sub(r"https?://", "", topic or ""))
     return re.sub(r"^www\.", "", m.group(1).lower()) if m else ""
+
+
+def _w(t, n):
+    """First n words of t (whole text when it is already short)."""
+    t = str(t or "").strip(); parts = t.split()
+    return t if len(parts) <= n else " ".join(parts[:n])
+
+
+def visualize(cfg, keep=1):
+    """Safety net: whatever the AI wrote, text-heavy scenes become picture scenes.
+    hook/question -> photo, problem/intro -> spotlight, steps/timeline -> flow, list -> gallery or icons,
+    compare/flip -> versus. The first `keep` text scene may stay (never as the opener); a real quote is kept."""
+    ico = VIS.resolve_icon
+    subject = cfg.get("company") or ""
+    out, kept = [], 0
+    for idx, s in enumerate(cfg.get("scenes") or []):
+        t = s.get("type")
+        if t in ("end", "quote") or t not in TEXT_LED | SUPPORT:
+            out.append(s); continue
+        if idx > 0 and kept < keep and t in ("intro", "timeline") and t not in [x.get("type") for x in out]:
+            # an intro with a real logo, or a timeline with photos, already looks good
+            if (t == "intro" and (cfg.get("images") or {}).get("logo_domain")) or \
+               (t == "timeline" and sum(1 for e in s.get("events") or [] if isinstance(e, dict) and e.get("image_query")) >= 3):
+                kept += 1; out.append(s); continue
+        base = {"lines": s["lines"]}
+        if s.get("kicker"): base["kicker"] = s["kicker"]
+        n = None
+        if t in ("hook", "question"):
+            cap = s.get("text") or s.get("pre") or ""
+            em = s.get("em") if t == "hook" else " ".join(x for x in (s.get("em"), s.get("post")) if x)
+            n = dict(base, type="photo", caption=_w(cap, 6), caption_em=_w(em, 4), cue=s.get("em_cue") or "",
+                     image_query=s.get("image_query") or subject)
+        elif t == "problem":
+            n = dict(base, type="spotlight", mood="bad", icon=ico(s.get("icon") or s.get("title") or subject),
+                     title=_w(s.get("title_em") or s.get("title"), 4),
+                     satellites=[{"icon": ico(c.get("icon") or c.get("text", "")), "label": _w(c.get("text"), 2), "cue": c.get("cue", "")}
+                                 for c in (s.get("cards") or [])[:6] if isinstance(c, dict)])
+        elif t == "intro":
+            tags = [x for x in s.get("tags") or [] if isinstance(x, dict)]
+            n = dict(base, type="spotlight", mood="good", icon=ico(subject), title=_w(subject, 3), climax_cue=s.get("tagline_cue", ""),
+                     caption=_w(" ".join(x for x in (s.get("tagline"), s.get("tagline_em")) if x), 5),
+                     satellites=[{"icon": ico(x.get("text", "")), "label": _w(x.get("text"), 2), "cue": x.get("cue", "")} for x in tags[:6]])
+        elif t == "steps":
+            n = dict(base, type="flow", title=_w(s.get("title"), 4),
+                     nodes=[{"label": _w(x.get("title"), 4), "sub": _w(" · ".join((x.get("chips") or [])[:2]), 4),
+                             "icon": ico(x.get("icon") or x.get("title", "")), "cue": x.get("cue", "")}
+                            for x in (s.get("steps") or [])[:5] if isinstance(x, dict)])
+        elif t == "timeline":
+            n = dict(base, type="flow", title=_w(s.get("title"), 4),
+                     nodes=[{"label": str(e.get("date", "")), "sub": _w(e.get("text"), 5),
+                             "icon": ico(e.get("image_query") or e.get("text", "")), "cue": e.get("cue", "")}
+                            for e in (s.get("events") or [])[:5] if isinstance(e, dict)])
+        elif t == "list":
+            items = [x for x in s.get("items") or [] if isinstance(x, dict)]
+            if 2 <= len(items) <= 4 and all(x.get("image_query") for x in items):
+                n = dict(base, type="gallery", title=_w(s.get("title"), 4),
+                         tiles=[{"label": _w(x.get("text"), 4), "icon": ico(x.get("icon") or x.get("text", "")),
+                                 "image_query": x["image_query"], "cue": x.get("cue", "")} for x in items])
+            else:
+                n = dict(base, type="icons", title=_w(s.get("title"), 4),
+                         items=[{"label": _w(x.get("text"), 5), "icon": ico(x.get("icon") or x.get("image_query") or x.get("text", "")),
+                                 "cue": x.get("cue", "")} for x in items[:6]])
+        elif t == "compare":
+            rows = [r for r in s.get("rows") or [] if isinstance(r, dict)]
+            n = dict(base, type="versus",
+                     left={"label": s.get("left_label", ""), "icon": ico(s.get("left_label", "")), "points": [_w(r.get("left"), 4) for r in rows[:3]],
+                           "cue": (rows[0].get("left_cue") if rows else "") or ""},
+                     right={"label": s.get("right_label", subject), "icon": ico(s.get("right_label") or subject), "points": [_w(r.get("right"), 4) for r in rows[:3]],
+                            "cue": (rows[0].get("right_cue") if rows else "") or ""})
+        elif t == "flip":
+            f, b = s.get("front") or {}, s.get("back") or {}
+            side = lambda d: {"label": _w(d.get("title"), 3), "icon": ico(d.get("title", "")), "cue": d.get("cue", ""),
+                              "points": [_w(f"{r.get('k', '')} {r.get('v', '')}", 4) for r in (d.get("rows") or [])[:3] if isinstance(r, dict)]}
+            n = dict(base, type="versus", title=_w(" ".join(x for x in (s.get("title"), s.get("title_em")) if x), 5), left=side(f), right=side(b))
+        if not n: out.append(s); continue
+        for k in [k for k, v in n.items() if v in ("", None, [])]: n.pop(k)
+        out.append(n)
+    cfg["scenes"] = out
+    return cfg
 
 
 def apply_website_rule(cfg, dom, lang="en"):
@@ -529,7 +614,9 @@ def write_script(topic, notes="", opts=None, key=None, tries=3):
     for attempt in range(1, tries + 1):
         raw = call_groq(msgs, key, effort="medium" if attempt == 1 else "low")
         try:
-            cfg = parse_json(raw); errs = validate(cfg, opts)
+            cfg = parse_json(raw)
+            if opts.get("visual", True): cfg = visualize(cfg)   # text-heavy scenes become pictures before checking
+            errs = validate(cfg, opts)
         except Exception as e:
             cfg, errs = None, [f"Output was not valid JSON ({e}). Return only the JSON object."]
         log(f"attempt {attempt}: {'ok' if not errs else str(len(errs)) + ' issue(s)'}")
@@ -541,9 +628,11 @@ def write_script(topic, notes="", opts=None, key=None, tries=3):
         msgs = [{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": user_prompt(topic, notes, facts[:1500], opts) + f"\n\nYOUR DRAFT:\n{draft}\n\nFix these problems and return the full corrected JSON only:\n- " + "\n- ".join(errs)}]
     else:
-        if not (cfg and all("cue" in e or "Total spoken" in e for e in last_errs)):
+        minor = ("cue", "Total spoken", "are pictures", "Too much text", "must be a picture")
+        if not (cfg and all(any(m in e for m in minor) for e in last_errs)):
             sys.exit("The model could not produce a valid script. Try rewording the topic or adding --notes.")
         log("accepting with minor issues (missed cues use estimated timing)")
+    if opts.get("visual", True): cfg = visualize(cfg)
     return apply_website_rule(tidy(cfg, opts), topic_domain(topic), opts["lang"])
 
 
@@ -556,7 +645,9 @@ def review(cfg, key, opts, facts):
                  (f"\n\nFACTS:\n{facts[:1500]}" if facts else "") + "\n\nDRAFT:\n" + json.dumps(cur, ensure_ascii=False, separators=(",", ":"))}]
         raw = call_groq(msgs, key, temperature=0.2, effort="low")
         try:
-            new = parse_json(raw); errs = validate(new, opts)
+            new = parse_json(raw)
+            if opts.get("visual", True): new = visualize(new)
+            errs = validate(new, opts)
         except Exception as e:
             new, errs = None, [f"invalid JSON ({e})"]
         if not errs:
@@ -567,7 +658,70 @@ def review(cfg, key, opts, facts):
     return cfg
 
 
+UPGRADE = """UPGRADE this existing video script to the picture-first style described above. Return the FULL new JSON only.
+Keep: "company", "url", the language, the facts, numbers, names, the call to action and the final "end" scene.
+Keep each spoken line ("say", "sub", "seed", "voice") word for word wherever it still fits, so its recorded voice is reused;
+change a line only when a new visual needs it. Replace text-led scenes (problem, intro, steps, question, compare, flip, list, hook)
+with picture scenes (spotlight, photo, gallery, chart, flow, icons, versus, map, pictogram, kpis, bubbles, gauge, funnel, cycle, chat, reveal)
+whose cue words come from those same lines. Open with a picture (spotlight or photo). Do not invent new facts or figures."""
+KEEP_KEYS = ("logo", "logo_kind", "voice", "voices", "language", "theme", "music", "music_volume", "subtitles", "subtitle_position", "pace",
+             "transition", "formats", "colors", "images", "sources", "cover", "stickers", "camera", "progress_bar", "background_motion", "_comment")
+
+
+def upgrade(vdir, key=None, tries=3):
+    """Rewrite an existing video.json picture-first, keeping its facts, voice lines and settings. Saves a backup."""
+    key = key or os.environ.get("GROQ_API_KEY")
+    if not key: sys.exit("Set the GROQ_API_KEY environment variable (a GitHub secret in Actions).")
+    path = os.path.join(vdir, "video.json")
+    old = json.load(open(path, encoding="utf-8"))
+    pics = sum(1 for s in old["scenes"] if s.get("type") in PICTURE)
+    if pics >= max(2, (2 * (len(old["scenes"]) - 1)) // 3) and not os.environ.get("FORCE_UPGRADE"):
+        log(f"{os.path.basename(vdir.rstrip('/'))} is already picture-first ({pics}/{len(old['scenes'])} picture scenes); left unchanged")
+        return old
+    lang = LANG.norm_code(old.get("language") or LANG.looks_like(" ".join(l.get("say", "") for s in old["scenes"] for l in s.get("lines", []))))
+    words = sum(count_units(spoken(s), lang) for s in old["scenes"])
+    secs = words / LANG.rate(lang)
+    opts = {"lang": lang, "duration": "short" if secs < 33 else "standard" if secs <= 56 else "long", "visual": True}
+    log(f"upgrading {os.path.basename(vdir.rstrip('/'))}: {len(old['scenes'])} scenes, {LANG.name(lang)}, {opts['duration']}")
+    base = UPGRADE + "\n\nCURRENT SCRIPT:\n" + json.dumps(old, ensure_ascii=False, separators=(",", ":"))
+    msgs = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": base}]
+    new, errs = None, []
+    for attempt in range(1, tries + 1):
+        raw = call_groq(msgs, key, effort="medium" if attempt == 1 else "low", temperature=0.35)
+        try:
+            new = parse_json(raw)
+            if opts.get("visual", True): new = visualize(new)
+            errs = validate(new, opts)
+        except Exception as e:
+            new, errs = None, [f"Output was not valid JSON ({e}). Return only the JSON object."]
+        log(f"attempt {attempt}: {'ok' if not errs else str(len(errs)) + ' issue(s)'}")
+        if not errs: break
+        for e in errs[:8]: print("   -", e, flush=True)
+        draft = json.dumps(new, ensure_ascii=False, separators=(",", ":")) if new else raw[:6000]
+        msgs = [{"role": "system", "content": SYSTEM},
+                {"role": "user", "content": base + f"\n\nYOUR DRAFT:\n{draft}\n\nFix these problems and return the full corrected JSON only:\n- " + "\n- ".join(errs)}]
+    if errs and not (new and all("cue" in e or "Total spoken" in e for e in errs)):
+        sys.exit("The model could not upgrade this script; it was left unchanged.")
+    opts.update({"voice": old.get("voice") or "auto", "theme": old.get("theme"), "music": old.get("music"), "subtitles": old.get("subtitles"),
+                 "pace": old.get("pace"), "transition": old.get("transition")})
+    new = tidy(visualize(new), opts)
+    for k in KEEP_KEYS:            # the creator's settings always survive the upgrade
+        if k in old: new[k] = old[k]
+    new["company"] = old.get("company", new.get("company"))
+    if old.get("url"): new["url"] = old["url"]
+    backup = os.path.join(vdir, "video.before-upgrade.json")
+    if not os.path.exists(backup): json.dump(old, open(backup, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    json.dump(new, open(path, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    reused = len({l["say"] for s in old["scenes"] for l in s["lines"]} & {l["say"] for s in new["scenes"] for l in s["lines"]})
+    log(f"upgraded: {', '.join(s['type'] for s in new['scenes'])} ({reused} voice line(s) reused; backup: video.before-upgrade.json)")
+    return new
+
+
 def main():
+    if len(sys.argv) > 2 and sys.argv[1] == "--upgrade":   # python engine/write_script.py --upgrade videos/<name> [videos/<other> ...]
+        for v in sys.argv[2:]:
+            upgrade(v if os.path.isdir(v) else os.path.join(REPO, "videos", v))
+        return
     ap = argparse.ArgumentParser(description="Write a video script (video.json) from a topic or pasted text")
     ap.add_argument("topic")
     ap.add_argument("--folder", help="folder name under videos/ (default: made from the topic)")

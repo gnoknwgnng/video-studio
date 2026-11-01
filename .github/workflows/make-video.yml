@@ -41,9 +41,14 @@ on:
         required: false
         default: false
       video:
-        description: "OR rebuild an existing folder inside videos/ (leave topic empty), e.g. docsdocs"
+        description: "OR rebuild an existing folder inside videos/ (leave topic empty), e.g. docsdocs. \"all\" = every video"
         required: false
         default: ""
+      upgrade:
+        description: "With 'video': first rewrite that older, text-heavy script picture-first (AI keeps its facts and voice lines)"
+        type: boolean
+        required: false
+        default: false
       requested_by:
         description: "Filled in by the website (who asked for this video)"
         required: false
@@ -76,7 +81,7 @@ jobs:
             list=$(python3 -c "import re,sys;s=re.sub(r'[^a-z0-9]+','-',sys.argv[1].lower()).strip('-')[:40].strip('-');print(s if len(s)>=4 else 'video-'+sys.argv[2])" "$TOPIC" "${{ github.run_number }}")
             echo "videos=[\"$list\"]" >> "$GITHUB_OUTPUT"; echo "New video from topic -> videos/$list"; exit 0
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            list="$VIDEO"
+            list=$(echo "$VIDEO" | tr ',' ' '); [ "$VIDEO" = "all" ] && list=$(ls videos)
           elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
             list=$(ls videos)
           else
@@ -140,6 +145,16 @@ jobs:
             --lang "$LANGUAGE" --voice "$VOICE" --options "$OPTIONS" ${{ github.event.inputs.site_photos == 'true' && '--site-photos' || '' }}
           echo "### Script written by AI" >> "$GITHUB_STEP_SUMMARY"
           python -c "import json;c=json.load(open('videos/${{ matrix.video }}/video.json',encoding='utf-8'));print('Language: **'+c.get('language','en')+'**, voice: **'+str(c.get('voice'))+'**\n');print('\n'.join('- **'+s['type']+'**: '+' '.join(l.get('sub') or l['say'] for l in s['lines']) for s in c['scenes']))" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upgrade the script to picture-first (AI)
+        if: github.event.inputs.upgrade == 'true' && github.event.inputs.topic == ''
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL || 'openai/gpt-oss-120b' }}
+        run: |
+          python engine/write_script.py --upgrade "videos/${{ matrix.video }}"
+          echo "### Script upgraded to picture-first" >> "$GITHUB_STEP_SUMMARY"
+          python -c "import json;c=json.load(open('videos/${{ matrix.video }}/video.json',encoding='utf-8'));print(' → '.join(s['type'] for s in c['scenes']))" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Check what this video needs
         id: needs
@@ -229,6 +244,7 @@ jobs:
           git config user.name "video-studio-bot"
           git config user.email "actions@users.noreply.github.com"
           git add "videos/${{ matrix.video }}/video.json" "videos/${{ matrix.video }}/.voice"
+          [ -f "videos/${{ matrix.video }}/video.before-upgrade.json" ] && git add "videos/${{ matrix.video }}/video.before-upgrade.json"
           if ! git diff --quiet --cached; then
             git commit -m "Video ${{ matrix.video }}: script + voice cache [skip ci]"
             for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done

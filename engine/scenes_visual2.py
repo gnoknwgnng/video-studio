@@ -36,7 +36,7 @@ def pictogram(s, c):
     if s.get("percent") or (hi > total and hi <= 100): hi = hi * total / 100
     hi = max(0, min(total, int(round(hi))))
     cols = {5: 5, 10: 5, 20: 5, 50: 10, 100: 10}[total]; rows = total // cols
-    size = {5: 150, 10: 150, 20: 120, 50: 74, 100: 68}[total]; gap = {5: 26, 10: 30, 20: 26, 50: 14, 100: 10}[total]
+    size = {5: 150, 10: 150, 20: 120, 50: 70, 100: 56}[total]; gap = {5: 26, 10: 30, 20: 26, 50: 12, 100: 9}[total]
     icon = s.get("icon") or "user"
     W = cols * size + (cols - 1) * gap; H = rows * size + (rows - 1) * gap
     x0, y0 = (1080 - W) // 2, 360 + max(0, (640 - H) // 2)
@@ -44,7 +44,7 @@ def pictogram(s, c):
                     f'{V.icon_svg(icon, size=size, stroke=1.6)}</div>' for k in range(total))
     disp = s.get("display") or f"{hi} in {total}"
     lbl_em = f' <em>{E(s["label_em"])}</em>' if s.get("label_em") else ""
-    ylab = y0 + H + 50
+    ylab = min(y0 + H + 40, 1070)
     html = (_head(s, c) + cells + f'<div class="ctr big" style="top:{ylab}px">{E(disp)}</div>'
             f'<div class="ctr sf lbl fit" style="top:{ylab + 140}px">{E(s.get("label", ""))}{lbl_em}</div>')
     tc = c.cue(s.get("cue", "x"), c.sb, frac=0.4)

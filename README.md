@@ -78,9 +78,14 @@ python engine/make_video.py videos/docsdocs --no-render      # fast: build the H
 
 ## Picture-first videos
 
-By default the AI writes **picture-first** scripts: at least two thirds of the scenes are photos, charts, diagrams, icons or maps,
-and on-screen text is cut to 1–4 word labels while the voice carries the detail. The checks send a script back to the AI if it is
-too text-heavy. (For the old text style: `--text-style`, or `visual=no` in the workflow options / *Visual style* on the website.)
+By default every new topic gets a **picture-first** script: at least three quarters of the scenes are photos, charts, diagrams,
+icons or maps, the first scene is always a picture, and on-screen text is cut to short labels while the voice carries the detail.
+Every topic template (explainer, product, hiring, pitch, news...) is picture-first too.
+
+**Guaranteed, whatever the AI writes.** If the model still returns text cards, `visualize()` converts them before the script is
+saved: hook/question → full-screen photo, problem/intro → spotlight (big icon with orbiting icons), steps/timeline → flow diagram,
+list → photo gallery or icon grid, compare/flip → versus. At most one text scene survives, and never as the opener.
+(For the old text style: `--text-style`, or `visual=no` in the workflow options / *Visual style* on the website.)
 
 | The script says… | The video shows… | Scene |
 |---|---|---|
@@ -112,6 +117,15 @@ Any item can carry an `"icon"` (any English word, matched to one of 2,292 [Lucid
 `"image_query"` (a photo search). Photos come from Pexels/Pixabay when their free keys are set, otherwise from Openverse,
 Wikimedia Commons and NASA (searched in parallel, with a time limit so a slow archive never stalls a render). When no photo
 is found, the tile shows its icon instead. Charts must use real figures: the AI may only chart numbers from its research or your notes.
+
+## Upgrading older, text-heavy videos
+
+Videos whose `video.json` was written before the picture-first engine (problem / intro / steps / question / compare cards)
+still render exactly as written. To convert them: *Actions → Make video → Run workflow*, put the folder name(s) in **video**
+(e.g. `docsdocs, tell-about-the-amazon-com`, or `all`) and tick **upgrade**. The AI rewrites each script picture-first,
+keeping its facts, company, voice, colours and as many recorded voice lines as possible; the old script is saved as
+`video.before-upgrade.json`. Videos that are already picture-first are left unchanged. Locally:
+`python engine/write_script.py --upgrade videos/docsdocs`.
 
 ## Smart photos, stickers, covers and other formats
 
