@@ -1,0 +1,247 @@
+{
+  "company": "TheBigBlind",
+  "url": "https://thebigblind.club",
+  "language": "en-in",
+  "voice": "chatterbox:indian_guy",
+  "theme": "light",
+  "music": "upbeat",
+  "music_volume": "low",
+  "subtitles": "kinetic",
+  "colors": {
+    "primary": "#1a73e8",
+    "accent": "#4285f4",
+    "alert": "#ea4335",
+    "ink": "#202124",
+    "background": "#ffffff"
+  },
+  "images": {
+    "logo_domain": "thebigblind.club"
+  },
+  "sources": [
+    {
+      "title": "Wikipedia (en): Poker",
+      "url": "https://en.wikipedia.org/wiki/Poker"
+    },
+    {
+      "title": "Wikipedia (en): Online poker",
+      "url": "https://en.wikipedia.org/wiki/Online_poker"
+    },
+    {
+      "title": "Wikipedia (en): Blind (poker)",
+      "url": "https://en.wikipedia.org/wiki/Blind_(poker)"
+    }
+  ],
+  "scenes": [
+    {
+      "type": "number",
+      "kicker": "Two hundred hands",
+      "value": 200,
+      "prefix": "",
+      "suffix": "",
+      "percent": false,
+      "label": "hands a month",
+      "label_em": "could save you money",
+      "note": "",
+      "cue": "playing",
+      "lines": [
+        {
+          "say": "Playing two hundred hands a month could save you money.",
+          "sub": "Playing 200 hands a month could save you money.",
+          "seed": 42
+        }
+      ]
+    },
+    {
+      "type": "photo",
+      "kicker": "Night grind",
+      "caption": "Cash left in your pocket",
+      "caption_em": "if you grind every night",
+      "image_query": "person playing poker at night with laptop",
+      "cue": "if",
+      "lines": [
+        {
+          "say": "If you grind every night, that’s cash left in your pocket.",
+          "sub": "If you grind every night, that's cash left in your pocket.",
+          "seed": 43
+        }
+      ]
+    },
+    {
+      "type": "spotlight",
+      "kicker": "Flat fee",
+      "title": "Caps the house rake",
+      "icon": "wallet",
+      "satellites": [
+        {
+          "icon": "dollar-sign",
+          "label": "Fixed fee",
+          "cue": "flat"
+        },
+        {
+          "icon": "users",
+          "label": "Active player",
+          "cue": "active"
+        },
+        {
+          "icon": "chart-line",
+          "label": "Predictable cost",
+          "cue": "predictable"
+        },
+        {
+          "icon": "shield-check",
+          "label": "Low rake",
+          "cue": "low"
+        },
+        {
+          "icon": "calendar",
+          "label": "Monthly",
+          "cue": "monthly"
+        }
+      ],
+      "mood": "good",
+      "climax_cue": "caps",
+      "caption": "Predictable bill",
+      "cue": "thebigblind",
+      "lines": [
+        {
+          "say": "TheBigBlind.club caps the house rake to a flat monthly fee per active player.",
+          "seed": 44
+        }
+      ]
+    },
+    {
+      "type": "flow",
+      "kicker": "Custom tournaments",
+      "title": "Design your own blinds",
+      "nodes": [
+        {
+          "label": "Design blind",
+          "sub": "design blind",
+          "icon": "settings",
+          "cue": "design"
+        },
+        {
+          "label": "Set schedule",
+          "sub": "set schedule",
+          "icon": "calendar",
+          "cue": "set"
+        },
+        {
+          "label": "Play",
+          "sub": "play",
+          "icon": "play",
+          "cue": "play"
+        }
+      ],
+      "cue": "you",
+      "lines": [
+        {
+          "say": "You can also design blind levels and tournament schedules yourself, unlike most sites.",
+          "seed": 45
+        }
+      ]
+    },
+    {
+      "type": "icons",
+      "kicker": "Built‑in tools",
+      "title": "Hand‑history analyzer",
+      "items": [
+        {
+          "label": "Analyzer",
+          "icon": "search",
+          "cue": "plus"
+        },
+        {
+          "label": "Community chat",
+          "icon": "message-circle",
+          "cue": "plus"
+        },
+        {
+          "label": "Stats tracker",
+          "icon": "bar-chart",
+          "cue": "plus"
+        }
+      ],
+      "cue": "plus",
+      "lines": [
+        {
+          "say": "Plus, it bundles a hand‑history analyzer you’d normally buy separately.",
+          "sub": "Plus, it bundles a hand‑history analyzer you'd normally buy separately.",
+          "seed": 46
+        }
+      ]
+    },
+    {
+      "type": "spotlight",
+      "kicker": "Surprise",
+      "title": "Cheaper than rake",
+      "icon": "star",
+      "satellites": [
+        {
+          "icon": "thumbs-up",
+          "label": "Cheaper",
+          "cue": "cheaper"
+        },
+        {
+          "icon": "hand",
+          "label": "200+ hands",
+          "cue": "over"
+        },
+        {
+          "icon": "dollar-sign",
+          "label": "Lower cost",
+          "cue": "cheaper"
+        },
+        {
+          "icon": "timer",
+          "label": "Monthly",
+          "cue": "cheaper"
+        },
+        {
+          "icon": "chart-pie",
+          "label": "Better value",
+          "cue": "cheaper"
+        }
+      ],
+      "mood": "good",
+      "climax_cue": "cheaper",
+      "caption": "Over two hundred hands",
+      "cue": "but",
+      "lines": [
+        {
+          "say": "But the real surprise? If you play over two hundred hands, the subscription ends up cheaper than traditional rake.",
+          "sub": "But the real surprise? If you play over 200 hands, the subscription ends up cheaper than traditional rake.",
+          "seed": 47
+        }
+      ]
+    },
+    {
+      "type": "website",
+      "url": "thebigblind.club",
+      "kicker": "One predictable bill",
+      "title": "Lower fees, custom tournaments, analysis tools",
+      "cue": "so",
+      "lines": [
+        {
+          "say": "So you get lower fees, custom tournaments, and analysis tools—all for one predictable bill.",
+          "seed": 48
+        }
+      ]
+    },
+    {
+      "type": "end",
+      "tagline": "Richer hands",
+      "tagline_em": "thanks to TheBigBlind",
+      "logo_cue": "remember",
+      "tagline_cue": "richer",
+      "image_query": "poker chips overflowing on table",
+      "lines": [
+        {
+          "say": "Remember, those two hundred hands could leave you richer, thanks to TheBigBlind.",
+          "sub": "Remember, those 200 hands could leave you richer, thanks to TheBigBlind.",
+          "seed": 49
+        }
+      ]
+    }
+  ]
+}
